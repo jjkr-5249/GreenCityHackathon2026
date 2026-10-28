@@ -42,6 +42,26 @@ COOL_SPOTS = [
     {"name": "Experimenta Vorplatz", "lat": 49.1485, "lon": 9.2205, "desc": "Shaded area near science center"},
 ]
 
+# Walking paths with natural tree shade: "points" is the route as [lat, lon] pairs
+SHADE_PATHS = [
+    {"name": "Neckar Riverside Walk", "shade": 80, "length_km": 1.4,
+     "desc": "Tree-lined path along the river, cool breeze",
+     "points": [[49.1390, 9.2100], [49.1420, 9.2095], [49.1450, 9.2092],
+                [49.1475, 9.2095], [49.1500, 9.2100]]},
+    {"name": "Pfuehlpark to Forest Trail", "shade": 90, "length_km": 1.3,
+     "desc": "Old trees through the park, then into the forest",
+     "points": [[49.1378, 9.2025], [49.1370, 9.1995], [49.1360, 9.1960],
+                [49.1352, 9.1930], [49.1348, 9.1905]]},
+    {"name": "Station to Wertwiesenpark", "shade": 55, "length_km": 1.2,
+     "desc": "Partly shaded route past the Experimenta",
+     "points": [[49.1440, 9.2180], [49.1460, 9.2195], [49.1485, 9.2205],
+                [49.1505, 9.2225], [49.1522, 9.2240]]},
+    {"name": "Marktplatz to the River", "shade": 60, "length_km": 0.5,
+     "desc": "Quick escape from the hot square to the Neckar",
+     "points": [[49.1427, 9.2109], [49.1430, 9.2115], [49.1412, 9.2108],
+                [49.1392, 9.2105]]},
+]
+
 MEETUPS = [
     {"id": 1, "title": "Morning Jog along Neckar", "activity": "Jogging", "organizer": "Anna M.",
      "date": "2026-07-15", "time": "06:30", "point": "Neckarufer Sued", "joined": 8, "max": 15,

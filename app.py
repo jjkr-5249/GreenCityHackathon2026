@@ -3,7 +3,7 @@ import folium
 from streamlit_folium import st_folium
 import plotly.express as px
 import pandas as pd
-from dummy_data import SENSORS, DRINKING_WATER, COOL_SPOTS, MEETUPS, RATINGS, HOURLY_TEMPS, HOURLY_PM
+from dummy_data import SENSORS, DRINKING_WATER, COOL_SPOTS, SHADE_PATHS, MEETUPS, RATINGS, HOURLY_TEMPS, HOURLY_PM
 
 # ─── Page config ───
 st.set_page_config(page_title="EcoCity HN", page_icon="🌿", layout="wide")
@@ -21,6 +21,7 @@ with st.sidebar:
     show_temp = st.checkbox("Temperature", value=True)
     show_water = st.checkbox("Drinking Water", value=True)
     show_cool = st.checkbox("Cool Spots", value=True)
+    show_paths = st.checkbox("Shaded Paths", value=True)
     show_air = st.checkbox("Air Quality", value=False)
     
     st.divider()
@@ -61,7 +62,13 @@ with tab_map:
         for _, r in sorted_s.head(5).iterrows():
             if st.button(f"🔵 {r['name']} — {r['temperature']}°C", key=f"cool_{r['id']}", width="stretch"):
                 st.session_state.selected_spot = r['id']
-        
+
+        if show_paths:
+            st.subheader("🌳 Shaded Paths")
+            for p in SHADE_PATHS:
+                st.markdown(f"**{p['name']}**  \n{p['shade']}% shade · {p['length_km']} km")
+                st.caption(p["desc"])
+
         if st.session_state.selected_spot:
             if st.button("🔄 Reset View", width="stretch"):
                 st.session_state.selected_spot = None
@@ -146,6 +153,16 @@ with tab_map:
                     icon=folium.Icon(color="green", icon="tree", prefix="fa")
                 ).add_to(m)
         
+        # Shaded paths: dark green = very shady, light green = partly shady
+        if show_paths:
+            for p in SHADE_PATHS:
+                color = "#1b5e20" if p["shade"] >= 75 else "#66bb6a"
+                folium.PolyLine(
+                    p["points"], color=color, weight=6, opacity=0.8,
+                    tooltip=f"🌳 {p['name']} — {p['shade']}% shade, {p['length_km']} km",
+                    popup=f"<b>{p['name']}</b><br>{p['desc']}"
+                ).add_to(m)
+
         # Air quality circles
         if show_air:
             for _, r in SENSORS.iterrows():
