@@ -3,7 +3,9 @@ import folium
 from streamlit_folium import st_folium
 import plotly.express as px
 import pandas as pd
-from dummy_data import SENSORS, DRINKING_WATER, COOL_SPOTS, SHADE_PATHS, MEETUPS, RATINGS, HOURLY_TEMPS, HOURLY_PM
+import numpy as np
+from dummy_data import SENSORS, DRINKING_WATER, COOL_SPOTS, WARM_SPOTS, SHADE_PATHS, SUNNY_PATHS, ICY_PATHS, ACCESSIBLE_PATHS, MEETUPS, RATINGS, HOURLY_TEMPS, HOURLY_PM
+from real_data import AREAS, TRACKS, DATA_INFO
 
 # ─── Page config ───
 st.set_page_config(page_title="EcoCity HN", page_icon="🌿", layout="wide")
@@ -20,10 +22,23 @@ with st.sidebar:
     st.subheader("Map Layers")
     show_temp = st.checkbox("Temperature", value=True)
     show_water = st.checkbox("Drinking Water", value=True)
-    show_cool = st.checkbox("Cool Spots", value=True)
-    show_paths = st.checkbox("Shaded Paths", value=True)
+    # Same checkbox, different layer depending on the season
+    show_spots = st.checkbox("Warm Spots" if season else "Cool Spots", value=True)
+    show_paths = st.checkbox("Sunny Paths" if season else "Shaded Paths", value=True)
+    show_ice = False
+    if season:
+        show_ice = st.checkbox("Icy Route Warnings ⚠️", value=True)
+    show_access = st.checkbox("Accessible Routes ♿", value=False)
     show_air = st.checkbox("Air Quality", value=False)
-    
+
+    st.divider()
+    st.subheader("Real Measurements")
+    show_real = st.checkbox("Measured Areas 📡", value=True)
+    real_by = "Temperature"
+    if show_real:
+        real_by = st.radio("Color areas by", ["Temperature", "Fine dust (PM2.5)"])
+    show_tracks = st.checkbox("Bike Sensor Tracks", value=False)
+
     st.divider()
     st.caption("Green City Heilbronn Hackathon 2026")
 
@@ -39,35 +54,62 @@ if "selected_spot" not in st.session_state:
 # ═══ TAB 1: MAP ═══
 with tab_map:
     st.header("☀️ Heilbronn Climate Map" if not season else "❄️ Heilbronn Climate Map")
-    
+
+    # Which sensor columns to use for the current season
+    temp_col = "temp_winter" if season else "temperature"
+    comfort_col = "comfort_winter" if season else "comfort"
+
     # Metrics
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Avg Temp", f"{SENSORS['temperature'].mean():.1f}°C")
+    c1.metric("Avg Temp", f"{SENSORS[temp_col].mean():.1f}°C")
     c2.metric("Avg Humidity", f"{SENSORS['humidity'].mean():.0f}%")
     c3.metric("Avg PM2.5", f"{SENSORS['pm25'].mean():.1f} µg/m³")
-    c4.metric("Comfort", f"{SENSORS['comfort'].mean():.0f}/100")
-    
+    c4.metric("Comfort", f"{SENSORS[comfort_col].mean():.0f}/100")
+
     # Layout: spots list on left, map on right
     col_spots, col_map = st.columns([1, 3])
-    
-    sorted_s = SENSORS.sort_values("temperature")
-    
+
+    sorted_s = SENSORS.sort_values(temp_col)
+
     with col_spots:
-        st.subheader("🔥 Hottest")
+        st.subheader("🔥 Warmest" if season else "🔥 Hottest")
         for _, r in sorted_s.tail(5).iloc[::-1].iterrows():
-            if st.button(f"🔴 {r['name']} — {r['temperature']}°C", key=f"hot_{r['id']}", width="stretch"):
-                st.session_state.selected_spot = r['id']
-        
-        st.subheader("❄️ Coolest")
-        for _, r in sorted_s.head(5).iterrows():
-            if st.button(f"🔵 {r['name']} — {r['temperature']}°C", key=f"cool_{r['id']}", width="stretch"):
+            if st.button(f"🔴 {r['name']} — {r[temp_col]}°C", key=f"hot_{r['id']}", width="stretch"):
                 st.session_state.selected_spot = r['id']
 
-        if show_paths:
+        st.subheader("🥶 Coldest" if season else "❄️ Coolest")
+        for _, r in sorted_s.head(5).iterrows():
+            if st.button(f"🔵 {r['name']} — {r[temp_col]}°C", key=f"cool_{r['id']}", width="stretch"):
+                st.session_state.selected_spot = r['id']
+
+        if show_ice:
+            st.subheader("⚠️ Icy Spots")
+            for i in ICY_PATHS:
+                risk = "🔴 High risk" if i["risk"] == "high" else "🟠 Medium risk"
+                st.markdown(f"**{i['name']}**  \n{risk}")
+                st.caption(i["reason"])
+
+        if show_paths and season:
+            st.subheader("☀️ Sunny Paths")
+            for p in SUNNY_PATHS:
+                st.markdown(f"**{p['name']}**  \n{p['sun']}% sun · {p['length_km']} km")
+                st.caption(p["desc"])
+
+        if show_paths and not season:
             st.subheader("🌳 Shaded Paths")
             for p in SHADE_PATHS:
                 st.markdown(f"**{p['name']}**  \n{p['shade']}% shade · {p['length_km']} km")
                 st.caption(p["desc"])
+
+        if show_access:
+            st.subheader("♿ Accessible Routes")
+            st.caption("Smooth routes for wheelchairs and strollers")
+            for a in ACCESSIBLE_PATHS:
+                steps = "✅ Step-free" if a["step_free"] else "⚠️ Has obstacles"
+                st.markdown(f"**{a['name']}**  \n{steps} · {a['surface']} · max {a['max_slope']}% slope · {a['length_km']} km")
+                if season:
+                    st.markdown("❄️ Cleared of snow first" if a["cleared"] else "❄️ Not cleared, may be icy")
+                st.caption(a["desc"])
 
         if st.session_state.selected_spot:
             if st.button("🔄 Reset View", width="stretch"):
@@ -86,11 +128,18 @@ with tab_map:
             map_zoom = 14
         
         m = folium.Map(location=map_center, zoom_start=map_zoom, tiles="OpenStreetMap")
-        
+
+        # With real data on, zoom so all measured areas fit (outer towns included)
+        if show_real and not selected:
+            m.fit_bounds([[AREAS["lat"].min(), AREAS["lon"].min()],
+                          [AREAS["lat"].max(), AREAS["lon"].max()]])
+
         # Temperature heatmap
         if show_temp:
             from folium.plugins import HeatMap
-            heat_data = [[r["lat"], r["lon"], r["temperature"]] for _, r in SENSORS.iterrows()]
+            # Scale temperatures to 0..1 (coldest..warmest) so negative winter values work too
+            low, high = SENSORS[temp_col].min(), SENSORS[temp_col].max()
+            heat_data = [[r["lat"], r["lon"], (r[temp_col] - low) / (high - low)] for _, r in SENSORS.iterrows()]
             HeatMap(heat_data, radius=40, blur=30).add_to(m)
         
         # Highlight selected spot
@@ -110,14 +159,18 @@ with tab_map:
         # Sensor markers
         for _, r in SENSORS.iterrows():
             is_selected = (selected == r["id"])
-            color = "blue" if r["temperature"] < 29 else "orange" if r["temperature"] < 33 else "red"
-            
+            t = r[temp_col]
+            if season:
+                color = "blue" if t < 0 else "lightblue" if t < 2 else "orange"
+            else:
+                color = "blue" if t < 29 else "orange" if t < 33 else "red"
+
             popup = f"""<b>{r['name']}</b><br>
-            🌡️ {r['temperature']}°C<br>
+            🌡️ {t}°C<br>
             💧 {r['humidity']}%<br>
             🌬️ PM2.5: {r['pm25']} µg/m³<br>
             PM10: {r['pm10']} µg/m³<br>
-            ⭐ Comfort: {r['comfort']}/100"""
+            ⭐ Comfort: {r[comfort_col]}/100"""
             
             if is_selected:
                 icon = folium.Icon(color="cadetblue", icon="star", prefix="fa")
@@ -127,7 +180,7 @@ with tab_map:
             folium.Marker(
                 [r["lat"], r["lon"]],
                 popup=popup,
-                tooltip=f"{r['name']}: {r['temperature']}°C",
+                tooltip=f"{r['name']}: {t}°C",
                 icon=icon
             ).add_to(m)
         
@@ -143,8 +196,19 @@ with tab_map:
                     icon=folium.Icon(color=color, icon="tint", prefix="fa")
                 ).add_to(m)
         
-        # Cool spots
-        if show_cool:
+        # Warm spots (winter)
+        if show_spots and season:
+            icons = {"library": "book", "shopping": "shopping-bag", "warming_room": "coffee"}
+            for w in WARM_SPOTS:
+                folium.Marker(
+                    [w["lat"], w["lon"]],
+                    popup=f"🔥 <b>{w['name']}</b><br>{w['desc']}<br>🕒 {w['hours']}",
+                    tooltip=f"🔥 {w['name']}",
+                    icon=folium.Icon(color="orange", icon=icons[w["type"]], prefix="fa")
+                ).add_to(m)
+
+        # Cool spots (summer)
+        if show_spots and not season:
             for s in COOL_SPOTS:
                 folium.Marker(
                     [s["lat"], s["lon"]],
@@ -154,13 +218,92 @@ with tab_map:
                 ).add_to(m)
         
         # Shaded paths: dark green = very shady, light green = partly shady
-        if show_paths:
+        if show_paths and not season:
             for p in SHADE_PATHS:
                 color = "#1b5e20" if p["shade"] >= 75 else "#66bb6a"
                 folium.PolyLine(
                     p["points"], color=color, weight=6, opacity=0.8,
                     tooltip=f"🌳 {p['name']} — {p['shade']}% shade, {p['length_km']} km",
                     popup=f"<b>{p['name']}</b><br>{p['desc']}"
+                ).add_to(m)
+
+        # Sunny paths (winter): dark yellow = very sunny, light yellow = partly sunny
+        if show_paths and season:
+            for p in SUNNY_PATHS:
+                color = "#f9a825" if p["sun"] >= 75 else "#ffd54f"
+                folium.PolyLine(
+                    p["points"], color=color, weight=6, opacity=0.9,
+                    tooltip=f"☀️ {p['name']} — {p['sun']}% sun, {p['length_km']} km",
+                    popup=f"<b>{p['name']}</b><br>{p['desc']}"
+                ).add_to(m)
+
+        # Where the sensor bikes rode, as a purple heatmap
+        if show_tracks:
+            from folium.plugins import HeatMap
+            # log scale, so busy roads don't hide the quiet ones (n goes from 1 to ~8000)
+            weight = np.log1p(TRACKS["n"]) / np.log1p(TRACKS["n"].max())
+            track_data = list(zip(TRACKS["lat"], TRACKS["lon"], weight))
+            HeatMap(track_data, radius=6, blur=4, min_opacity=0.4,
+                    gradient={0.2: "#d1c4e9", 0.6: "#7e57c2", 1.0: "#311b92"}).add_to(m)
+
+        # Real measured areas (openSenseMap bike sensors)
+        if show_real:
+            for _, a in AREAS.iterrows():
+                if real_by == "Temperature":
+                    # blue = cooler than the rest of the city at the same hour, orange = warmer
+                    color = "#1565c0" if a["temp_anom"] < -0.2 else "#64b5f6" if a["temp_anom"] < 0 else "#fb8c00"
+                else:
+                    # green = cleaner air, orange/red = more fine dust than the rest of the city
+                    color = "#43a047" if a["pm25_anom"] < 0.1 else "#fb8c00" if a["pm25_anom"] < 0.4 else "#e53935"
+                air = "🟢 Cleaner than average" if a["pm25_anom"] < 0.1 else "🟠 Slightly worse" if a["pm25_anom"] < 0.4 else "🔴 More fine dust"
+                popup = f"""<b>📡 {a['area']}</b> · Rank {a['rank_overall']} of {len(AREAS)}<br><br>
+                🌡️ <b>Temperature:</b> {a['temp_mean']:.1f}°C<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;{a['temp_anom']:+.2f}°C vs. city at the same hour<br>
+                🌬️ <b>Air quality:</b> {air}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;PM2.5: {a['pm25_mean']:.1f} µg/m³ ({a['pm25_anom']:+.2f} vs. city)<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;PM10: {a['pm10_mean']:.1f} µg/m³<br><br>
+                <small>{a['readings']} readings · {a['days']} days · {a['riders']} bikes</small>"""
+                folium.Circle(
+                    [a["lat"], a["lon"]], radius=450,
+                    color=color, weight=2, fill=True, fill_opacity=0.35,
+                    tooltip=f"📡 {a['area']} — click for values",
+                    popup=folium.Popup(popup, max_width=280)
+                ).add_to(m)
+
+                # Clickable name label in the middle of the circle
+                short = a["label"]
+                label = f"""<div style="transform: translate(-50%, -50%); width: max-content;
+                    background: white; color: #111; border: 2px solid {color}; border-radius: 10px;
+                    padding: 1px 6px; font: bold 11px sans-serif; cursor: pointer;">{short}</div>"""
+                folium.Marker(
+                    [a["lat"], a["lon"]],
+                    icon=folium.DivIcon(html=label, icon_size=(0, 0)),
+                    tooltip=f"📡 {a['area']} — click for values",
+                    popup=folium.Popup(popup, max_width=280)
+                ).add_to(m)
+
+        # Icy spots (winter): dotted red line plus a snowflake marker at the start
+        if show_ice:
+            for i in ICY_PATHS:
+                color = "#c62828" if i["risk"] == "high" else "#ef6c00"
+                tip = f"⚠️ {i['name']} — {i['risk']} risk: {i['reason']}"
+                folium.PolyLine(i["points"], color=color, weight=7, opacity=0.9,
+                                dash_array="2, 10", tooltip=tip).add_to(m)
+                folium.Marker(
+                    i["points"][0], tooltip=tip,
+                    icon=folium.Icon(color="red" if i["risk"] == "high" else "orange",
+                                     icon="snowflake", prefix="fa")
+                ).add_to(m)
+
+        # Accessible routes: dashed so they stand out from shaded paths
+        # dark blue = step-free, light blue = has some obstacles
+        if show_access:
+            for a in ACCESSIBLE_PATHS:
+                color = "#0d47a1" if a["step_free"] else "#64b5f6"
+                folium.PolyLine(
+                    a["points"], color=color, weight=6, opacity=0.9, dash_array="10, 8",
+                    tooltip=f"♿ {a['name']} — {a['surface']}, max {a['max_slope']}% slope",
+                    popup=f"<b>{a['name']}</b><br>{a['desc']}"
                 ).add_to(m)
 
         # Air quality circles
@@ -178,7 +321,7 @@ with tab_map:
         # Show selected spot details
         if selected:
             spot_row = SENSORS[SENSORS["id"] == selected].iloc[0]
-            st.info(f"📍 **{spot_row['name']}** — {spot_row['temperature']}°C | Humidity: {spot_row['humidity']}% | PM2.5: {spot_row['pm25']} µg/m³ | Comfort: {spot_row['comfort']}/100")
+            st.info(f"📍 **{spot_row['name']}** — {spot_row[temp_col]}°C | Humidity: {spot_row['humidity']}% | PM2.5: {spot_row['pm25']} µg/m³ | Comfort: {spot_row[comfort_col]}/100")
 
 
 # ═══ TAB 2: COMMUNITY ═══
@@ -647,6 +790,31 @@ with tab_dashboard:
     
     st.divider()
     
+    # Real measurements: area ranking
+    st.subheader("📡 Real Measurements: Area Ranking")
+    st.caption(
+        f"openSenseMap bike sensors · {DATA_INFO['sensors']} bikes · "
+        f"{DATA_INFO['points']:,} readings · {DATA_INFO['first_day']} to {DATA_INFO['last_day']}. "
+        "Rank 1 = coolest and cleanest. Differences are compared with all sensors at the same hour."
+    )
+    st.dataframe(
+        AREAS[["rank_overall", "area", "temp_anom", "temp_mean", "pm25_anom", "pm25_mean", "readings", "days"]],
+        column_config={
+            "rank_overall": "Rank",
+            "area": "Area",
+            "temp_anom": st.column_config.NumberColumn("Temp diff (°C)", format="%+.2f"),
+            "temp_mean": st.column_config.NumberColumn("Avg temp (°C)", format="%.1f"),
+            "pm25_anom": st.column_config.NumberColumn("PM2.5 diff (µg/m³)", format="%+.2f"),
+            "pm25_mean": st.column_config.NumberColumn("Avg PM2.5 (µg/m³)", format="%.1f"),
+            "readings": "Readings",
+            "days": "Days",
+        },
+        hide_index=True, width="stretch",
+    )
+    st.caption("The gaps between areas are small (a few tenths of a degree), so read the ranking as a tendency.")
+
+    st.divider()
+
     # Sensor coverage map
     st.subheader("📡 Sensor Coverage & Green Zone Gaps")
     st.write("Green circles show sensor coverage (~300m). Gaps indicate areas needing additional sensors or green infrastructure.")

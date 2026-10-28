@@ -1,5 +1,5 @@
 import pandas as pd
-
+ 
 # ─── Sensor locations with pre-set readings (no generation needed) ───
 SENSORS = pd.DataFrame([
     {"id": "S01", "name": "Marktplatz", "lat": 49.1427, "lon": 9.2109, "type": "urban_center", "temperature": 35.2, "humidity": 42, "pm25": 18.3, "pm10": 27.5, "comfort": 28},
@@ -18,7 +18,12 @@ SENSORS = pd.DataFrame([
     {"id": "S14", "name": "Theresienwiese", "lat": 49.1460, "lon": 9.2080, "type": "open_field", "temperature": 30.5, "humidity": 50, "pm25": 10.5, "pm10": 15.8, "comfort": 65},
     {"id": "S15", "name": "Neckarufer Nord", "lat": 49.1500, "lon": 9.2100, "type": "waterfront", "temperature": 28.0, "humidity": 57, "pm25": 7.8, "pm10": 11.7, "comfort": 84},
 ])
-
+ 
+# Winter values (January), same order as above: S01, S02, ... S15
+# Built-up areas stay warmer, parks, fields and the river get coldest
+SENSORS["temp_winter"] = [3.1, 0.4, 0.6, 2.8, 2.9, -0.2, 3.8, 1.2, 2.6, -1.5, 1.5, 1.3, 2.0, 0.2, -0.1]
+SENSORS["comfort_winter"] = [55, 40, 42, 50, 58, 30, 35, 38, 52, 35, 48, 47, 50, 32, 30]
+ 
 DRINKING_WATER = [
     {"name": "Marktplatzbrunnen", "lat": 49.1427, "lon": 9.2109, "status": "working"},
     {"name": "Wertwiesenpark Brunnen", "lat": 49.1525, "lon": 9.2245, "status": "working"},
@@ -31,7 +36,7 @@ DRINKING_WATER = [
     {"name": "Boeckingen Brunnen", "lat": 49.1455, "lon": 9.1845, "status": "working"},
     {"name": "Neckarufer Brunnen", "lat": 49.1395, "lon": 9.2095, "status": "working"},
 ]
-
+ 
 COOL_SPOTS = [
     {"name": "Wertwiesenpark Schattenplatz", "lat": 49.1522, "lon": 9.2240, "desc": "Shaded area with benches under old trees"},
     {"name": "Stadtbibliothek", "lat": 49.1430, "lon": 9.2115, "desc": "Air-conditioned public library, free entry"},
@@ -41,7 +46,23 @@ COOL_SPOTS = [
     {"name": "Harmonie Center", "lat": 49.1415, "lon": 9.2175, "desc": "Air-conditioned shopping center"},
     {"name": "Experimenta Vorplatz", "lat": 49.1485, "lon": 9.2205, "desc": "Shaded area near science center"},
 ]
-
+ 
+# Winter mode: indoor places where people can warm up for free
+WARM_SPOTS = [
+    {"name": "Stadtbibliothek", "lat": 49.1430, "lon": 9.2115, "type": "library",
+     "hours": "Tue-Sat 10:00-19:00", "desc": "Heated public library, free entry, seats and Wi-Fi"},
+    {"name": "Harmonie Center", "lat": 49.1415, "lon": 9.2175, "type": "shopping",
+     "hours": "Mon-Sat 9:00-20:00", "desc": "Heated shopping center with seating areas"},
+    {"name": "Waermestube Bahnhof", "lat": 49.1445, "lon": 9.2170, "type": "warming_room",
+     "hours": "Daily 8:00-18:00", "desc": "Warming room with free hot drinks, open to everyone"},
+    {"name": "Waermestube Boeckingen", "lat": 49.1452, "lon": 9.1860, "type": "warming_room",
+     "hours": "Mon-Fri 10:00-16:00", "desc": "Community warming room with soup at lunchtime"},
+    {"name": "Stadtteilbibliothek Sontheim", "lat": 49.1302, "lon": 9.2290, "type": "library",
+     "hours": "Tue-Fri 12:00-18:00", "desc": "Small heated library, children's corner"},
+    {"name": "Stadtgalerie", "lat": 49.1422, "lon": 9.2150, "type": "shopping",
+     "hours": "Mon-Sat 9:30-20:00", "desc": "Heated shopping mall near the old town"},
+]
+ 
 # Walking paths with natural tree shade: "points" is the route as [lat, lon] pairs
 SHADE_PATHS = [
     {"name": "Neckar Riverside Walk", "shade": 80, "length_km": 1.4,
@@ -61,7 +82,64 @@ SHADE_PATHS = [
      "points": [[49.1427, 9.2109], [49.1430, 9.2115], [49.1412, 9.2108],
                 [49.1392, 9.2105]]},
 ]
-
+ 
+# Winter mode: walking paths with the most sunshine (open, south-facing, no tall buildings)
+SUNNY_PATHS = [
+    {"name": "Neckar Sunny Bank", "sun": 85, "length_km": 1.4,
+     "desc": "Open riverside, bare trees let the low winter sun through",
+     "points": [[49.1390, 9.2112], [49.1420, 9.2107], [49.1450, 9.2104],
+                [49.1475, 9.2107], [49.1500, 9.2112]]},
+    {"name": "Theresienwiese Open Loop", "sun": 95, "length_km": 0.9,
+     "desc": "Wide open field, sun all day",
+     "points": [[49.1455, 9.2070], [49.1470, 9.2070], [49.1470, 9.2095],
+                [49.1455, 9.2095], [49.1455, 9.2070]]},
+    {"name": "Marktplatz to Kaiserstrasse", "sun": 70, "length_km": 0.7,
+     "desc": "Wide street, sunny around midday",
+     "points": [[49.1427, 9.2109], [49.1420, 9.2140], [49.1415, 9.2170], [49.1410, 9.2200]]},
+    {"name": "Sontheim South Walk", "sun": 60, "length_km": 1.0,
+     "desc": "Quiet residential streets, partly sunny",
+     "points": [[49.1300, 9.2300], [49.1310, 9.2270], [49.1325, 9.2240], [49.1340, 9.2210]]},
+]
+ 
+# Winter mode: places that get icy or slippery
+# risk is "high" or "medium"
+ICY_PATHS = [
+    {"name": "Neckar Footbridge", "risk": "high",
+     "reason": "Bridges freeze first, black ice in the morning",
+     "points": [[49.1440, 9.2080], [49.1440, 9.2120]]},
+    {"name": "Pfuehlpark Hill Path", "risk": "high",
+     "reason": "Shaded slope, ice stays all day",
+     "points": [[49.1378, 9.2025], [49.1372, 9.2005], [49.1368, 9.1990]]},
+    {"name": "Kilianskirche Cobblestones", "risk": "medium",
+     "reason": "Smooth old cobblestones, slippery when wet",
+     "points": [[49.1415, 9.2180], [49.1420, 9.2190], [49.1425, 9.2198]]},
+    {"name": "Stadium Underpass", "risk": "medium",
+     "reason": "Ramp and stairs, often icy after snow",
+     "points": [[49.1515, 9.2055], [49.1525, 9.2052]]},
+]
+ 
+# Smooth, step-free routes for wheelchairs and strollers
+# max_slope is in %, step_free = no steps or curbs without ramps
+# cleared = cleared of snow and ice first in winter
+ACCESSIBLE_PATHS = [
+    {"name": "Station to Marktplatz", "surface": "Smooth asphalt", "max_slope": 2,
+     "step_free": True, "cleared": True, "length_km": 0.6,
+     "desc": "Wide sidewalks, lowered curbs at every crossing",
+     "points": [[49.1440, 9.2180], [49.1435, 9.2160], [49.1430, 9.2135], [49.1427, 9.2109]]},
+    {"name": "Kaiserstrasse Pedestrian Zone", "surface": "Flat paving stones", "max_slope": 1,
+     "step_free": True, "cleared": True, "length_km": 0.4,
+     "desc": "No traffic, benches along the way",
+     "points": [[49.1410, 9.2200], [49.1415, 9.2190], [49.1418, 9.2178], [49.1420, 9.2165]]},
+    {"name": "Campus to Wertwiesenpark", "surface": "Smooth asphalt", "max_slope": 3,
+     "step_free": True, "cleared": False, "length_km": 0.9,
+     "desc": "Flat campus paths, ramp at the park entrance",
+     "points": [[49.1480, 9.2150], [49.1490, 9.2180], [49.1505, 9.2215], [49.1520, 9.2250]]},
+    {"name": "Theresienwiese to Stadium", "surface": "Asphalt, some cobblestones", "max_slope": 5,
+     "step_free": False, "cleared": False, "length_km": 0.8,
+     "desc": "Short cobblestone stretch and one curb without ramp near the stadium",
+     "points": [[49.1460, 9.2080], [49.1480, 9.2070], [49.1505, 9.2060], [49.1530, 9.2050]]},
+]
+ 
 MEETUPS = [
     {"id": 1, "title": "Morning Jog along Neckar", "activity": "Jogging", "organizer": "Anna M.",
      "date": "2026-07-15", "time": "06:30", "point": "Neckarufer Sued", "joined": 8, "max": 15,
@@ -76,7 +154,7 @@ MEETUPS = [
      "date": "2026-07-22", "time": "17:30", "point": "Waldgebiet Jaegerhaus", "joined": 6, "max": 12,
      "desc": "Shaded forest route. ~10km, moderate."},
 ]
-
+ 
 RATINGS = [
     {"spot": "Waldgebiet Jaegerhaus", "rating": 4.8, "reviews": 15, "comment": "Coolest spot in the city"},
     {"spot": "Wertwiesenpark", "rating": 4.5, "reviews": 23, "comment": "Great shade, always breezy"},
@@ -86,7 +164,7 @@ RATINGS = [
     {"spot": "Hauptbahnhof", "rating": 2.5, "reviews": 14, "comment": "Concrete heat trap"},
     {"spot": "Marktplatz", "rating": 2.1, "reviews": 31, "comment": "Too hot, avoid afternoons"},
 ]
-
+ 
 # Simple hourly data for charts (pre-computed, not generated)
 HOURLY_TEMPS = pd.DataFrame({
     "hour": list(range(24)) * 3,
@@ -100,7 +178,7 @@ HOURLY_TEMPS = pd.DataFrame({
         19,18,17,17,17,18,20,22,24,25,27,27,28,28,27,27,26,25,23,22,21,20,19,19,
     ]
 })
-
+ 
 HOURLY_PM = pd.DataFrame({
     "hour": list(range(24)) * 3,
     "type": ["Park"]*24 + ["Urban Center"]*24 + ["Industrial"]*24,
