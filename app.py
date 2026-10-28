@@ -54,16 +54,16 @@ with tab_map:
     with col_spots:
         st.subheader("🔥 Hottest")
         for _, r in sorted_s.tail(5).iloc[::-1].iterrows():
-            if st.button(f"🔴 {r['name']} — {r['temperature']}°C", key=f"hot_{r['id']}", use_container_width=True):
+            if st.button(f"🔴 {r['name']} — {r['temperature']}°C", key=f"hot_{r['id']}", width="stretch"):
                 st.session_state.selected_spot = r['id']
         
         st.subheader("❄️ Coolest")
         for _, r in sorted_s.head(5).iterrows():
-            if st.button(f"🔵 {r['name']} — {r['temperature']}°C", key=f"cool_{r['id']}", use_container_width=True):
+            if st.button(f"🔵 {r['name']} — {r['temperature']}°C", key=f"cool_{r['id']}", width="stretch"):
                 st.session_state.selected_spot = r['id']
         
         if st.session_state.selected_spot:
-            if st.button("🔄 Reset View", use_container_width=True):
+            if st.button("🔄 Reset View", width="stretch"):
                 st.session_state.selected_spot = None
                 st.rerun()
     
@@ -183,7 +183,7 @@ with tab_community:
             point = st.selectbox("Meeting Point", SENSORS["name"].tolist())
             max_p = st.slider("Max Participants", 2, 50, 15)
             desc = st.text_area("Description")
-            if st.form_submit_button("Create Meetup", use_container_width=True):
+            if st.form_submit_button("Create Meetup", width="stretch"):
                 st.success(f"✅ '{title}' created! (Demo)")
     
     with col_browse:
@@ -230,7 +230,7 @@ with tab_rate:
                     issue = st.selectbox("Issue", 
                         ["Broken fountain", "No shade", "Trash", "Unsafe", "Needs seating", "Needs water"])
                 
-                if st.form_submit_button("Submit", use_container_width=True):
+                if st.form_submit_button("Submit", width="stretch"):
                     st.success("✅ Thanks! (Demo)")
             
             st.subheader("Suggest Improvement")
@@ -240,7 +240,7 @@ with tab_rate:
                      "Pet water station", "Sensor box", "Mist cooling zone"])
                 where = st.selectbox("Where?", SENSORS["name"].tolist(), key="suggest_where")
                 urgency = st.select_slider("Urgency", ["Nice to have", "Would help", "Needed", "Urgent"])
-                if st.form_submit_button("Submit Suggestion", use_container_width=True):
+                if st.form_submit_button("Submit Suggestion", width="stretch"):
                     st.success("✅ Recorded! (Demo)")
         
         with col_reviews:
@@ -260,7 +260,7 @@ with tab_rate:
                 color_continuous_scale=["#c8e6c9", "#2e7d32"]
             )
             fig.update_layout(height=280, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
     
     # ─── Sub-tab: Community Ideas Board ───
     with ideas_tab:
@@ -277,7 +277,7 @@ with tab_rate:
                 idea_location = st.selectbox("Suggested Location", SENSORS["name"].tolist(), key="idea_loc")
                 idea_desc = st.text_area("Describe your idea", placeholder="Explain what you'd like to see and why it would help...")
                 idea_image = st.file_uploader("Upload a photo or sketch (optional)", type=["png", "jpg", "jpeg"])
-                if st.form_submit_button("Post Idea", use_container_width=True):
+                if st.form_submit_button("Post Idea", width="stretch"):
                     st.success("✅ Idea posted! (Demo)")
         
         st.divider()
@@ -319,9 +319,9 @@ with tab_rate:
             **Suggested locations:** Marktplatz (35.2°C avg), Hauptbahnhof (34.0°C avg)
             """)
             c1, c2, c3 = st.columns(3)
-            c1.button("👍 47 Votes", key="vote_1", use_container_width=True)
-            c2.button("💬 12 Comments", key="comment_1", use_container_width=True)
-            c3.button("📍 Show on Map", key="map_1", use_container_width=True)
+            c1.button("👍 47 Votes", key="vote_1", width="stretch")
+            c2.button("💬 12 Comments", key="comment_1", width="stretch")
+            c3.button("📍 Show on Map", key="map_1", width="stretch")
         
         st.divider()
         
@@ -373,9 +373,9 @@ with tab_rate:
             **Coverage goal:** Every 200m along main roads = complete city monitoring
             """)
             c1, c2, c3 = st.columns(3)
-            c1.button("👍 63 Votes", key="vote_2", use_container_width=True)
-            c2.button("💬 21 Comments", key="comment_2", use_container_width=True)
-            c3.button("📍 Show on Map", key="map_2", use_container_width=True)
+            c1.button("👍 63 Votes", key="vote_2", width="stretch")
+            c2.button("💬 21 Comments", key="comment_2", width="stretch")
+            c3.button("📍 Show on Map", key="map_2", width="stretch")
         
         st.divider()
         
@@ -429,9 +429,9 @@ with tab_rate:
             **Suggested locations:** Wertwiesenpark (popular dog walking), Neckarufer paths, Pfuehlpark
             """)
             c1, c2, c3 = st.columns(3)
-            c1.button("👍 52 Votes", key="vote_3", use_container_width=True)
-            c2.button("💬 18 Comments", key="comment_3", use_container_width=True)
-            c3.button("📍 Show on Map", key="map_3", use_container_width=True)
+            c1.button("👍 52 Votes", key="vote_3", width="stretch")
+            c2.button("💬 18 Comments", key="comment_3", width="stretch")
+            c3.button("📍 Show on Map", key="map_3", width="stretch")
         
         st.divider()
         
@@ -507,9 +507,9 @@ with tab_rate:
             streets near school. The daily watering rota is their own idea — I'm very proud."*
             """)
             c1, c2, c3 = st.columns(3)
-            c1.button("👍 203 Votes", key="vote_4", use_container_width=True)
-            c2.button("💬 67 Comments", key="comment_4", use_container_width=True)
-            c3.button("📍 Show on Map", key="map_4", use_container_width=True)
+            c1.button("👍 203 Votes", key="vote_4", width="stretch")
+            c2.button("💬 67 Comments", key="comment_4", width="stretch")
+            c3.button("📍 Show on Map", key="map_4", width="stretch")
             st.caption('💬 Top comment: *"This is what education should look like. Our school wants to join — can we make this city-wide?"* — Frau Müller, Elly-Heuss-Knapp Gymnasium')
         
         st.divider()
@@ -529,7 +529,7 @@ with tab_rate:
         col_img5, col_desc5 = st.columns([1, 2])
         with col_img5:
             try:
-                st.image("canopy-5.jpg", use_container_width=True)
+                st.image("canopy-5.jpg", width="stretch")
             except:
                 st.info("📷 Image: canopy-5.jpg not found — place it in the ecocity-hn folder")
             st.caption("📸 Reference: Tejiendo la Calle, Valverde de la Vera & Alhaurín de la Torre, Spain")
@@ -560,9 +560,9 @@ with tab_rate:
             Let's knit Heilbronn cool! 🧶❤️
             """)
             c1, c2, c3 = st.columns(3)
-            c1.button("👍 112 Votes", key="vote_5", use_container_width=True)
-            c2.button("💬 43 Comments", key="comment_5", use_container_width=True)
-            c3.button("📍 Show on Map", key="map_5", use_container_width=True)
+            c1.button("👍 112 Votes", key="vote_5", width="stretch")
+            c2.button("💬 43 Comments", key="comment_5", width="stretch")
+            c3.button("📍 Show on Map", key="map_5", width="stretch")
             st.caption("💬 Top comment: *\"This is the most beautiful idea! My Oma wants to join!\"* — Lena, 29")
         
 
@@ -584,7 +584,7 @@ with tab_dashboard:
                    title="Typical Daily Temperature by Area Type",
                    labels={"temperature": "°C", "hour": "Hour"})
     fig1.update_layout(height=350)
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width="stretch")
     
     # PM chart
     col_pm, col_bar = st.columns(2)
@@ -594,14 +594,14 @@ with tab_dashboard:
                        title="PM2.5 Throughout the Day",
                        labels={"pm25": "µg/m³", "hour": "Hour"})
         fig2.update_layout(height=300)
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
     
     with col_bar:
         fig3 = px.bar(SENSORS.sort_values("temperature"), x="name", y="temperature",
                       color="temperature", color_continuous_scale=["#2196f3", "#ff9800", "#f44336"],
                       title="Temperature by Location")
         fig3.update_layout(height=300, xaxis_tickangle=-45)
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width="stretch")
     
     st.divider()
     
