@@ -4,12 +4,20 @@ import streamlit as st
 T = {
     # Sidebar
     "tagline": ("Making Heilbronn liveable", "Heilbronn lebenswert machen"),
-    "winter_mode": ("Winter Mode ❄️", "Wintermodus ❄️"),
     "map_layers": ("Map Layers", "Kartenebenen"),
-    "layer_temp": ("Temperature", "Temperatur"),
-    "layer_water": ("Drinking Water", "Trinkwasser"),
-    "layer_cool": ("Cool Spots", "Kühle Orte"),
-    "layer_air": ("Air Quality", "Luftqualität"),
+    "layer_real": ("Measured Areas 📡", "Gemessene Gebiete 📡"),
+    "color_by": ("Color areas by", "Gebiete einfärben nach"),
+    "color_livability": ("Livability score", "Lebensqualität"),
+    "color_temperature": ("Temperature", "Temperatur"),
+    "color_pm25": ("Fine dust (PM2.5)", "Feinstaub (PM2.5)"),
+    "livability_legend": ("🟢 above 60 (darker = better) · ⚪ 50–60 · 🔴 below 50 (redder = worse)",
+                          "🟢 über 60 (dunkler = besser) · ⚪ 50–60 · 🔴 unter 50 (röter = schlechter)"),
+    "layer_tracks": ("Bike Sensor Tracks", "Fahrten der Sensor-Räder"),
+    "layer_bike_streets": ("Bike Lane Streets 🚲", "Straßen mit Radweg 🚲"),
+    "layer_bumpy": ("Bumpy Roads 🛣️", "Holprige Straßen 🛣️"),
+    "layer_access": ("Accessible Routes ♿", "Barrierearme Wege ♿"),
+    "bumpy_missing": ("{missing} of {total} bumpy roads were not found in the road network",
+                      "{missing} von {total} holprigen Straßen wurden im Straßennetz nicht gefunden"),
 
     # Tabs
     "tab_map": ("🗺️ City Map", "🗺️ Stadtkarte"),
@@ -18,17 +26,89 @@ T = {
     "tab_dashboard": ("📊 Dashboard", "📊 Dashboard"),
 
     # Map tab
-    "map_header_summer": ("☀️ Heilbronn Climate Map", "☀️ Klimakarte Heilbronn"),
-    "map_header_winter": ("❄️ Heilbronn Climate Map", "❄️ Klimakarte Heilbronn"),
+    "map_header": ("☀️ Heilbronn Climate Map", "☀️ Klimakarte Heilbronn"),
+    "measured_by": ("Measured by {sensors} openSenseMap sensor bikes, {first} to {last}",
+                    "Gemessen von {sensors} openSenseMap-Sensor-Rädern, {first} bis {last}"),
     "avg_temp": ("Avg Temp", "Ø Temperatur"),
-    "avg_humidity": ("Avg Humidity", "Ø Luftfeuchtigkeit"),
     "avg_pm25": ("Avg PM2.5", "Ø PM2.5"),
-    "comfort": ("Comfort", "Komfort"),
-    "humidity": ("Humidity", "Luftfeuchtigkeit"),
-    "hottest": ("🔥 Hottest", "🔥 Am heißesten"),
-    "coolest": ("❄️ Coolest", "❄️ Am kühlsten"),
+    "sensor_bikes": ("Sensor Bikes", "Sensor-Räder"),
+    "readings": ("Readings", "Messwerte"),
+    "warmest_areas": ("🔥 Warmest Areas", "🔥 Wärmste Gebiete"),
+    "vs_city_now": ("Compared with the whole city at the same hour",
+                    "Im Vergleich zur ganzen Stadt zur selben Uhrzeit"),
+    "coolest_areas": ("❄️ Coolest Areas", "❄️ Kühlste Gebiete"),
     "reset_view": ("🔄 Reset View", "🔄 Ansicht zurücksetzen"),
     "selected": ("📍 Selected: {name}", "📍 Ausgewählt: {name}"),
+    "area_info": ("📍 **{area}** — rank {rank} of {total} | {temp:.1f}°C ({anom:+.2f}°C vs. city) | "
+                  "PM2.5: {pm25:.1f} µg/m³ | PM10: {pm10:.1f} µg/m³",
+                  "📍 **{area}** — Rang {rank} von {total} | {temp:.1f} °C ({anom:+.2f} °C ggü. Stadt) | "
+                  "PM2.5: {pm25:.1f} µg/m³ | PM10: {pm10:.1f} µg/m³"),
+
+    # Area popup
+    "air_cleaner": ("🟢 Cleaner than average", "🟢 Sauberer als der Durchschnitt"),
+    "air_slightly_worse": ("🟠 Slightly worse", "🟠 Etwas schlechter"),
+    "air_more_dust": ("🔴 More fine dust", "🔴 Mehr Feinstaub"),
+    "rank_of": ("Rank {rank} of {total}", "Rang {rank} von {total}"),
+    "livability": ("Livability", "Lebensqualität"),
+    "livability_parts": ("air {air:.0f} · heat {heat:.0f} · bike {bike:.0f}",
+                         "Luft {air:.0f} · Hitze {heat:.0f} · Rad {bike:.0f}"),
+    "temperature": ("Temperature", "Temperatur"),
+    "vs_city_same_hour": ("{anom:+.2f}°C vs. city at the same hour", "{anom:+.2f} °C ggü. der Stadt zur selben Uhrzeit"),
+    "air_quality": ("Air quality", "Luftqualität"),
+    "vs_city": ("vs. city", "ggü. Stadt"),
+    "bike_lanes": ("Bike lanes", "Radwege"),
+    "bumpy_roads": ("Bumpy roads", "Holprige Straßen"),
+    "own_lane": ("own bike lane", "eigener Radweg"),
+    "shared_lane": ("shared with cars", "mit Autos geteilt"),
+    "bike_in_area": ("{name}: {kind}, {n} segments", "{name}: {kind}, {n} Abschnitte"),
+    "no_bike_street": ("No listed bike street in this area", "Keine gelistete Radstraße in diesem Gebiet"),
+    "nearest_link": ("♿ Nearest: <b>{target}</b>, {km:.1f} km smooth route{via}{warn}",
+                     "♿ Nächste: <b>{target}</b>, {km:.1f} km glatter Weg{via}{warn}"),
+    "via": (" via {streets}", " über {streets}"),
+    "crosses_bumpy": (" ⚠️ crosses a bumpy road", " ⚠️ führt über eine holprige Straße"),
+    "bumpy_in_area": ("{name}: roughness {avg:.0f} (peak {peak:.0f})", "{name}: Rauheit {avg:.0f} (Spitze {peak:.0f})"),
+    "no_bumpy": ("No listed bumpy road in this area", "Keine gelistete holprige Straße in diesem Gebiet"),
+    "area_footer": ("{readings} readings · {days} days · {riders} bikes",
+                    "{readings} Messwerte · {days} Tage · {riders} Räder"),
+    "area_tooltip": ("📡 {area} — click for values", "📡 {area} — klicken für Werte"),
+
+    # Bike streets and bumpy roads on the map
+    "own_lane_full": ("🚲 Own bike lane", "🚲 Eigener Radweg"),
+    "shared_lane_full": ("🚗🚲 Shared lane (bikes and cars)", "🚗🚲 Geteilte Spur (Räder und Autos)"),
+    "street_segments": ("{n} street segments", "{n} Straßenabschnitte"),
+    "bike_tooltip": ("🚲 {name} — {n} segments", "🚲 {name} — {n} Abschnitte"),
+    "avg_roughness": ("Average roughness: {v:.1f}", "Durchschnittliche Rauheit: {v:.1f}"),
+    "peak_roughness": ("Peak roughness: {v:.0f}", "Höchste Rauheit: {v:.0f}"),
+    "segments_with_data": ("{n} segments with data", "{n} Abschnitte mit Daten"),
+    "bumpy_tooltip": ("🛣️ {name} — roughness {v:.0f}", "🛣️ {name} — Rauheit {v:.0f}"),
+
+    # Smooth route between bike streets
+    "route_tooltip": ("♿ Smooth route to {target} — {km:.1f} km", "♿ Glatter Weg nach {target} — {km:.1f} km"),
+    "route_direct": ("♿🚲 **{start}** connects directly with **{target}**.",
+                     "♿🚲 **{start}** ist direkt mit **{target}** verbunden."),
+    "route_found": ("♿🚲 **Smooth route** (green) from **{start}** to the nearest bike lane street, "
+                    "**{target}**: {km:.1f} km via {via}. {note}",
+                    "♿🚲 **Glatter Weg** (grün) von **{start}** zur nächsten Straße mit Radweg, "
+                    "**{target}**: {km:.1f} km über {via}. {note}"),
+    "small_paths": ("small connecting paths", "kleine Verbindungswege"),
+    "route_bumpy_note": ("⚠️ There is no way around a bumpy road on this route.",
+                         "⚠️ Auf diesem Weg lässt sich eine holprige Straße nicht umgehen."),
+    "route_smooth_note": ("No bumpy roads on the way.", "Keine holprigen Straßen auf dem Weg."),
+    "clear_route": ("✖ Clear route", "✖ Weg ausblenden"),
+    "click_hint": ("💡 Click a violet bike street to see the smoothest route to the next bike lane.",
+                   "💡 Klicke auf eine violette Radstraße, um den glattesten Weg zum nächsten Radweg zu sehen."),
+
+    # Accessible routes
+    "access_header": ("♿ Accessible Routes", "♿ Barrierearme Wege"),
+    "access_caption": ("Parts of the bike streets that the sensor bikes rode at least {n} times "
+                       "and that are not on a bumpy road",
+                       "Abschnitte der Radstraßen, die die Sensor-Räder mindestens {n}-mal befahren haben "
+                       "und die nicht auf einer holprigen Straße liegen"),
+    "access_checked": ("{km:.1f} of {total:.1f} km checked", "{km:.1f} von {total:.1f} km geprüft"),
+    "access_no_data": ("⚠️ No sensor data on this street", "⚠️ Keine Sensordaten auf dieser Straße"),
+    "access_tooltip": ("♿ {name} — {kind}, {km:.1f} km checked", "♿ {name} — {kind}, {km:.1f} km geprüft"),
+    "access_popup": ("<b>♿ {name}</b><br>{area}<br><br>{kind}<br>{km:.1f} of {total:.1f} km checked with the sensor bikes",
+                     "<b>♿ {name}</b><br>{area}<br><br>{kind}<br>{km:.1f} von {total:.1f} km mit den Sensor-Rädern geprüft"),
 
     # Community tab
     "community_header": ("👥 Community Hub", "👥 Community-Treffpunkt"),
@@ -48,9 +128,7 @@ T = {
     "date_at_time": ("{date} at {time}", "{date} um {time}"),
     "joined_count": ("joined ({n} spots left)", "dabei ({n} Plätze frei)"),
     "organized_by": ("Organized by {name}", "Organisiert von {name}"),
-    "you": ("You", "dir"),
     "joined": ("✅ Joined", "✅ Dabei"),
-    "full": ("Full", "Ausgebucht"),
     "join_event": ("Join this event", "Mitmachen"),
 
     # Rate & Report tab
@@ -98,8 +176,8 @@ T = {
     "n_votes": ("👍 {n} Votes", "👍 {n} Stimmen"),
     "n_comments": ("💬 {n} Comments", "💬 {n} Kommentare"),
     "show_on_map": ("📍 Show on Map", "📍 Auf Karte zeigen"),
-    "image_missing": ("📷 Image: {file} not found — place it in the images folder",
-                      "📷 Bild: {file} nicht gefunden — lege es in den Ordner images"),
+    "image_missing": ("📷 Image: {file} not found — place it in the ecocity-hn folder",
+                      "📷 Bild: {file} nicht gefunden — lege es in den Ordner ecocity-hn"),
 
     # Idea 1: Cooling Wall
     "idea1_title": ("Cooling Water Walls at Hot Spots", "Kühlende Wasserwände an Hitze-Hotspots"),
@@ -372,53 +450,46 @@ Lasst uns Heilbronn kühl stricken! 🧶❤️
                           '💬 Top-Kommentar: *„Das ist die schönste Idee überhaupt! Meine Oma will mitmachen!“* — Lena, 29'),
 
     # Dashboard tab
-    "dashboard_header": ("📊 July 2026 Analysis", "📊 Analyse Juli 2026"),
-    "sensors": ("Sensors", "Sensoren"),
-    "hot_days": ("Hot Days (>35°C)", "Hitzetage (>35 °C)"),
-    "coolest_spot": ("Coolest Spot", "Kühlster Ort"),
-    "worst_air": ("Worst Air", "Schlechteste Luft"),
-    "chart_daily_temp": ("Typical Daily Temperature by Area Type",
-                         "Typischer Temperaturverlauf nach Gebietstyp"),
-    "chart_pm": ("PM2.5 Throughout the Day", "PM2.5 im Tagesverlauf"),
-    "chart_temp_location": ("Temperature by Location", "Temperatur nach Ort"),
-    "hour": ("Hour", "Uhrzeit"),
-    "area_type": ("Area type", "Gebietstyp"),
-    "location": ("Location", "Ort"),
+    "dashboard_header": ("📊 Heilbronn Bike Sensor Analysis", "📊 Auswertung der Heilbronner Sensor-Räder"),
+    "dashboard_caption": ("openSenseMap bike sensors · {sensors} bikes · {points} readings · {first} to {last}",
+                          "openSenseMap-Fahrradsensoren · {sensors} Räder · {points} Messwerte · {first} bis {last}"),
+    "areas_ranked": ("Areas Ranked", "Bewertete Gebiete"),
+    "coolest_area": ("Coolest Area", "Kühlstes Gebiet"),
+    "most_dust": ("Most Fine Dust", "Am meisten Feinstaub"),
+    "temp_vs_city": ("{v:+.2f}°C vs. city", "{v:+.2f} °C ggü. Stadt"),
+    "pm_vs_city": ("{v:+.2f} µg/m³ vs. city", "{v:+.2f} µg/m³ ggü. Stadt"),
+    "chart_temp_vs_city": ("Temperature vs. City (same hour)", "Temperatur ggü. Stadt (selbe Uhrzeit)"),
+    "chart_pm_vs_city": ("Fine Dust (PM2.5) vs. City (same hour)", "Feinstaub (PM2.5) ggü. Stadt (selbe Uhrzeit)"),
+    "area": ("Area", "Gebiet"),
+    "gaps_tendency": ("The gaps between areas are small (a few tenths of a degree), so read them as tendencies.",
+                      "Die Unterschiede zwischen den Gebieten sind klein (wenige Zehntelgrad), lies sie also als Tendenz."),
+    "ranking_header": ("📡 Area Ranking", "📡 Rangliste der Gebiete"),
+    "ranking_caption": ("Rank 1 = coolest and cleanest. Differences are compared with all sensors at the same hour.",
+                        "Rang 1 = am kühlsten und saubersten. Die Unterschiede sind mit allen Sensoren zur selben Uhrzeit verglichen."),
+    "livability_formula": ("🏙️ Livability (0–100) = {parts}. Above 60 green, 50–60 white, below 50 red (45 = strongest red).",
+                           "🏙️ Lebensqualität (0–100) = {parts}. Über 60 grün, 50–60 weiß, unter 50 rot (45 = kräftigstes Rot)."),
+    "part_air": ("air", "Luft"),
+    "part_heat": ("heat", "Hitze"),
+    "part_bike": ("bike", "Rad"),
+    "col_rank": ("Rank", "Rang"),
+    "col_temp_diff": ("Temp diff (°C)", "Temp.-Differenz (°C)"),
+    "col_temp_avg": ("Avg temp (°C)", "Ø Temp. (°C)"),
+    "col_pm_diff": ("PM2.5 diff (µg/m³)", "PM2.5-Differenz (µg/m³)"),
+    "col_pm_avg": ("Avg PM2.5 (µg/m³)", "Ø PM2.5 (µg/m³)"),
+    "col_days": ("Days", "Tage"),
     "needs_help": ("🎯 Where Heilbronn Needs Help", "🎯 Wo Heilbronn Hilfe braucht"),
-    "hottest_least_infra": ("**Hottest areas with least infrastructure:**",
-                            "**Heißeste Gebiete mit der wenigsten Infrastruktur:**"),
-    "recommendations": ("**Recommendations:**", "**Empfehlungen:**"),
-    "rec_trees_industrie": ("🌳 Plant trees at **Neckargartach Industrie** — hottest, worst air",
-                            "🌳 Bäume pflanzen in **Neckargartach Industrie** — am heißesten, schlechteste Luft"),
-    "rec_fountain_kaiser": ("💧 Add fountain at **Kaiserstrasse** — high foot traffic, no water",
-                            "💧 Brunnen an der **Kaiserstrasse** ergänzen — viele Fußgänger, kein Wasser"),
-    "rec_shade_bahnhof": ("🏗️ Shade structure at **Hauptbahnhof** — transit hub, people wait in heat",
-                          "🏗️ Schattenspender am **Hauptbahnhof** — Verkehrsknoten, Menschen warten in der Hitze"),
-    "rec_fix_pfuehl": ("🔧 Fix fountain at **Pfuehlpark** — reported broken",
-                       "🔧 Brunnen im **Pfuehlpark** reparieren — als defekt gemeldet"),
-    "rec_canopy_markt": ("🌳 Expand canopy at **Marktplatz** — tourist area, consistently hot",
-                         "🌳 Mehr Baumkronen am **Marktplatz** — Touristengebiet, durchgehend heiß"),
-    "coverage_header": ("📡 Sensor Coverage & Green Zone Gaps", "📡 Sensorabdeckung & Lücken bei Grünzonen"),
-    "coverage_intro": ("Green circles show sensor coverage (~300m). Gaps indicate areas needing additional sensors or green infrastructure.",
-                       "Grüne Kreise zeigen die Sensorabdeckung (~300 m). Lücken markieren Gebiete, die zusätzliche Sensoren oder grüne Infrastruktur brauchen."),
-    "gap": ("GAP", "LÜCKE"),
-    "gap_residential": ("No sensors, residential area", "Keine Sensoren, Wohngebiet"),
-    "gap_suburb": ("No sensors, growing suburb", "Keine Sensoren, wachsender Vorort"),
-    "gap_highway": ("No sensors, near highway", "Keine Sensoren, nahe Autobahn"),
-    "gap_dense": ("No sensors, dense housing", "Keine Sensoren, dichte Bebauung"),
-    "coverage_legend": ("""
-**Legend:**
-🟢 Green circles = current sensor coverage (~300m radius)
-🔴 Red zones = coverage gaps — priority areas for new sensors or green infrastructure
-""", """
-**Legende:**
-🟢 Grüne Kreise = aktuelle Sensorabdeckung (~300 m Radius)
-🔴 Rote Zonen = Abdeckungslücken — vorrangige Gebiete für neue Sensoren oder grüne Infrastruktur
-"""),
+    "help_warmest": ("**🔥 Warmest areas** (more shade and trees)", "**🔥 Wärmste Gebiete** (mehr Schatten und Bäume)"),
+    "help_dust": ("**🌫️ Most fine dust** (less traffic, more green)", "**🌫️ Am meisten Feinstaub** (weniger Verkehr, mehr Grün)"),
+    "help_bumpy": ("**🛣️ Bumpiest bike roads** (repair first)", "**🛣️ Holprigste Radstraßen** (zuerst reparieren)"),
+    "roughness": ("roughness {v:.0f}", "Rauheit {v:.0f}"),
+    "where_measured": ("🗺️ Where the Sensor Bikes Measured", "🗺️ Wo die Sensor-Räder gemessen haben"),
+    "where_measured_intro": ("Purple = streets the sensor bikes rode (darker = more readings). Circles = the ranked areas.",
+                             "Lila = Straßen, die die Sensor-Räder befahren haben (dunkler = mehr Messwerte). Kreise = die bewerteten Gebiete."),
+    "coverage_tooltip": ("📡 {area} — {readings} readings on {days} days", "📡 {area} — {readings} Messwerte an {days} Tagen"),
 
     # Footer
-    "footer": ("🌿 EcoCity HN — Green City Heilbronn Hackathon | Data: openSenseMap · Sensor.Community · Open-Meteo",
-               "🌿 EcoCity HN — Green City Heilbronn Hackathon | Daten: openSenseMap · Sensor.Community · Open-Meteo"),
+    "footer": ("🌿 EcoCity HN — Green City Heilbronn Hackathon | Data: openSenseMap · OpenStreetMap",
+               "🌿 EcoCity HN — Green City Heilbronn Hackathon | Daten: openSenseMap · OpenStreetMap"),
 }
 
 # ─── German names for option values and data categories (English value -> German) ───
@@ -444,39 +515,9 @@ OPTIONS_DE = {
     # Most requested
     "Trees": "Bäume", "Fountains": "Brunnen", "Cooling": "Kühlung",
     "Pet Water": "Wasser für Tiere", "Sensors": "Sensoren",
-    # Chart area types
-    "Park": "Park", "Urban Center": "Innenstadt", "Waterfront": "Flussufer", "Industrial": "Industrie",
-    # Fountain status
-    "working": "funktioniert", "broken": "defekt", "dry": "trocken",
-}
-
-# Sensor types are stored as ids in the data, so both languages need a label
-SENSOR_TYPES = {
-    "urban_center": ("City centre", "Innenstadt"),
-    "park": ("Park", "Park"),
-    "transit": ("Transit hub", "Verkehrsknoten"),
-    "shopping": ("Shopping street", "Einkaufsstraße"),
-    "waterfront": ("Waterfront", "Flussufer"),
-    "industrial": ("Industrial", "Industrie"),
-    "sports": ("Sports ground", "Sportstätte"),
-    "old_town": ("Old town", "Altstadt"),
-    "forest": ("Forest", "Wald"),
-    "residential": ("Residential", "Wohngebiet"),
-    "campus": ("Campus", "Campus"),
-    "open_field": ("Open field", "Freifläche"),
 }
 
 # ─── German versions of the demo data texts ───
-COOL_SPOTS_DE = {
-    "Wertwiesenpark Schattenplatz": "Schattiger Platz mit Bänken unter alten Bäumen",
-    "Stadtbibliothek": "Klimatisierte Stadtbibliothek, Eintritt frei",
-    "Neckarufer Promenade": "Luftiger Spazierweg am Fluss, 2–3 Grad kühler",
-    "Waldgebiet Trails": "Waldwege, bis zu 5 Grad kühler",
-    "Pfuehlpark Schattenweg": "Baumgesäumte Wege mit gutem Schatten",
-    "Harmonie Center": "Klimatisiertes Einkaufszentrum",
-    "Experimenta Vorplatz": "Schattiger Bereich beim Science Center",
-}
-
 MEETUPS_DE = {
     1: ("Morgenlauf am Neckar", "Früher Morgenlauf am Fluss entlang, bevor die Hitze kommt. ca. 5 km."),
     2: ("Yoga im Park", "Yoga im Freien im Schatten. Bring deine eigene Matte mit!"),
@@ -502,13 +543,6 @@ def translate(key, lang, **kwargs):
 
 def translate_option(value, lang):
     return OPTIONS_DE.get(value, value) if lang == "de" else value
-
-
-def translate_sensor_type(type_id, lang):
-    labels = SENSOR_TYPES.get(type_id)
-    if labels is None:
-        return type_id
-    return labels[1 if lang == "de" else 0]
 
 
 # ─── Shortcuts for the current page language (set by the ENG / DE switch, key "lang_de") ───
