@@ -1,9 +1,15 @@
+"""All real data the app shows: measured areas, sensor bike tracks, bike streets and bumpy roads.
+
+The CSV files are read once from the csv/ folder in the project root. Everything below is
+plain data (DataFrames, lists of dicts) that the tabs import, so no tab reads a file itself.
+"""
 import ast
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
 import pandas as pd
 
-DATA_DIR = Path(__file__).parent
+# tabs/real_data.py -> project root -> csv/
+DATA_DIR = Path(__file__).resolve().parent.parent / "csv"
 
 
 def distance_m(lat1, lon1, lat2, lon2):
@@ -24,6 +30,13 @@ def distance_m(lat1, lon1, lat2, lon2):
 AREAS = pd.read_csv(DATA_DIR / "heilbronn_area_ranking.csv")
 
 AREA_RADIUS_M = 450  # radius of the measured-area circles on the map (meters)
+AREA_NAMES = AREAS["area"].tolist()  # used as locations in the forms
+MARKTPLATZ = [49.1422, 9.2190]       # map center when nothing is selected
+
+
+def weighted_mean(column):
+    """Average over all areas, weighted by how many readings each area has."""
+    return (AREAS[column] * AREAS["readings"]).sum() / AREAS["readings"].sum()
 
 # Where the sensor bikes rode: GPS points grouped into cells of about 55 m
 #   lat, lon   center of the cell
@@ -128,6 +141,9 @@ for road in BUMPY_ROADS:
         road["lon"] = sum(p[1] for p in road["points"]) / len(road["points"])
     else:
         road["lat"], road["lon"] = None, None
+
+# Only bumpy roads found in the road network can go on the map
+BUMPY_ON_MAP = [r for r in BUMPY_ROADS if r["lat"] is not None and r["lon"] is not None]
 
 # ─── Accessible routes: the bike streets, checked with the sensor bikes ───
 # A piece of a bike street counts as accessible when:

@@ -3,7 +3,7 @@ from functools import lru_cache
 
 import networkx as nx
 
-from real_data import NETWORK, BIKE_STREETS, BUMPY_ROADS, parse_linestring, distance_m
+from tabs.real_data import NETWORK, BIKE_STREETS, BUMPY_ROADS, parse_linestring, distance_m, line_length_m
 
 # A meter on a bumpy road counts like this many meters on a smooth road,
 # so routes go around bumpy roads unless there is no other way
@@ -24,7 +24,7 @@ for names, wkt in zip(NETWORK["names"], NETWORK["geometry_wkt"]):
     a, b = node(points[0]), node(points[-1])
     for name in names:
         STREET_NODES.setdefault(name, set()).update([a, b])
-    length = sum(distance_m(*p, *q) for p, q in zip(points, points[1:]))
+    length = line_length_m(points)
     bumpy = any(n in BUMPY_NAMES for n in names)
     cost = length * (BUMPY_PENALTY if bumpy else 1)
     # two pieces between the same crossings: keep the cheaper one

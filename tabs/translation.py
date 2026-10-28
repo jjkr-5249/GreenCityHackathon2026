@@ -1,3 +1,9 @@
+"""Every text on the website in English and German, plus t() / opt() to pick the right one.
+
+To change a text: edit it in T below (first = English, second = German).
+To add a text: add a new key to T, then use t("your_key") in a tab.
+Texts with {name} placeholders are filled in by t(), e.g. t("selected", name="Flein").
+"""
 import streamlit as st
 
 # ─── UI texts: key -> (English, German) ───
@@ -20,10 +26,55 @@ T = {
                       "{missing} von {total} holprigen Straßen wurden im Straßennetz nicht gefunden"),
 
     # Tabs
+    "tab_home": ("🏠 Home", "🏠 Start"),
     "tab_map": ("🗺️ City Map", "🗺️ Stadtkarte"),
     "tab_community": ("👥 Community", "👥 Community"),
     "tab_rate": ("⭐ Rate & Report", "⭐ Bewerten & Melden"),
     "tab_dashboard": ("📊 Dashboard", "📊 Dashboard"),
+
+    # Home tab
+    "home_title": ("🌿 Stay cool and safe in Heilbronn", "🌿 Kühl und sicher durch Heilbronn"),
+    "home_mission": ("Summers in Heilbronn are getting hotter. EcoCity HN helps you find cooler, cleaner and "
+                     "smoother ways through the city, using real measurements from sensor bikes. Every rating, "
+                     "report and idea you share shows the city where Heilbronn needs more trees, shade, "
+                     "water points or cooling stations.",
+                     "Die Sommer in Heilbronn werden heißer. EcoCity HN hilft dir, kühlere, sauberere und "
+                     "glattere Wege durch die Stadt zu finden – mit echten Messungen von Sensor-Rädern. Jede "
+                     "Bewertung, Meldung und Idee, die du teilst, zeigt der Stadt, wo Heilbronn mehr Bäume, "
+                     "Schatten, Wasserstellen oder Kühlstationen braucht."),
+    "home_motto": ("Help residents today — help the city invest smarter tomorrow.",
+                   "Den Menschen heute helfen – damit die Stadt morgen klüger investiert."),
+    "home_highlights": ("✨ Highlights from the measurements", "✨ Highlights aus den Messungen"),
+    "home_coolest": ("Coolest area: {area}", "Kühlstes Gebiet: {area}"),
+    "home_cleanest": ("Cleanest air: {area}", "Sauberste Luft: {area}"),
+    "home_most_livable": ("Most livable: {area}", "Höchste Lebensqualität: {area}"),
+    "home_what_you_can_do": ("🧭 What you can do here", "🧭 Was du hier tun kannst"),
+    "home_map_text": ("See which areas are warmer or cooler, where the air is cleaner, and find smooth "
+                      "routes between bike lane streets.",
+                      "Sieh, welche Gebiete wärmer oder kühler sind, wo die Luft sauberer ist, und finde "
+                      "glatte Wege zwischen Straßen mit Radweg."),
+    "home_community_text": ("Join or create meetups to jog, walk, cycle or do yoga together at cooler times.",
+                            "Tritt Treffen bei oder erstelle eigene, um zu kühleren Zeiten gemeinsam zu joggen, "
+                            "spazieren, Rad zu fahren oder Yoga zu machen."),
+    "home_rate_text": ("Rate spots, report problems like missing shade or water, and vote on ideas for the city.",
+                       "Bewerte Orte, melde Probleme wie fehlenden Schatten oder fehlendes Wasser, und stimme "
+                       "über Ideen für die Stadt ab."),
+    "home_dashboard_text": ("See the ranking of all measured areas and where Heilbronn needs help most.",
+                            "Sieh die Rangliste aller gemessenen Gebiete und wo Heilbronn am meisten Hilfe braucht."),
+    "home_how_header": ("🔄 How your input helps the city", "🔄 Wie deine Beiträge der Stadt helfen"),
+    "home_step1_title": ("You move and share", "Du bist unterwegs und teilst"),
+    "home_step1_text": ("Sensor bikes measure heat and fine dust as they ride. You add ratings, reports and ideas.",
+                        "Sensor-Räder messen beim Fahren Hitze und Feinstaub. Du ergänzt Bewertungen, "
+                        "Meldungen und Ideen."),
+    "home_step2_title": ("We map the city", "Wir kartieren die Stadt"),
+    "home_step2_text": ("Measurements are compared area by area at the same hour, so hot spots, dusty "
+                        "streets and bumpy roads stand out.",
+                        "Die Messungen werden Gebiet für Gebiet zur selben Uhrzeit verglichen – so fallen "
+                        "Hitzeinseln, staubige Straßen und holprige Wege auf."),
+    "home_step3_title": ("Planners see where to act", "Die Stadtplanung sieht, wo zu handeln ist"),
+    "home_step3_text": ("The Dashboard shows where more trees, shade, water points or road repairs would help most.",
+                        "Das Dashboard zeigt, wo mehr Bäume, Schatten, Wasserstellen oder Straßenreparaturen "
+                        "am meisten helfen würden."),
 
     # Map tab
     "map_header": ("☀️ Heilbronn Climate Map", "☀️ Klimakarte Heilbronn"),
@@ -176,8 +227,8 @@ T = {
     "n_votes": ("👍 {n} Votes", "👍 {n} Stimmen"),
     "n_comments": ("💬 {n} Comments", "💬 {n} Kommentare"),
     "show_on_map": ("📍 Show on Map", "📍 Auf Karte zeigen"),
-    "image_missing": ("📷 Image: {file} not found — place it in the ecocity-hn folder",
-                      "📷 Bild: {file} nicht gefunden — lege es in den Ordner ecocity-hn"),
+    "image_missing": ("📷 Image: {file} not found — place it in the images folder",
+                      "📷 Bild: {file} nicht gefunden — lege es in den Ordner images"),
 
     # Idea 1: Cooling Wall
     "idea1_title": ("Cooling Water Walls at Hot Spots", "Kühlende Wasserwände an Hitze-Hotspots"),
@@ -537,11 +588,13 @@ RATING_COMMENTS_DE = {
 
 
 def translate(key, lang, **kwargs):
+    """Text for key in lang ("en" or "de"), with any {placeholders} filled in from kwargs."""
     text = T[key][1 if lang == "de" else 0]
     return text.format(**kwargs) if kwargs else text
 
 
 def translate_option(value, lang):
+    """German name of a dropdown option (English stays as it is; unknown values are returned unchanged)."""
     return OPTIONS_DE.get(value, value) if lang == "de" else value
 
 

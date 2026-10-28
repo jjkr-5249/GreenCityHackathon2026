@@ -1,125 +1,113 @@
+"""📊 Dashboard tab: the area ranking, where Heilbronn needs help, and where the sensor bikes measured.
+
+This is the planners' view: it turns the measured data into the places that most need
+shade, trees, cleaner air or road repairs.
+"""
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import plotly.express as px
-from dummy_data import SENSORS, HOURLY_TEMPS, HOURLY_PM
-from translation import t, opt, get_lang, translate_sensor_type
+from tabs.real_data import AREAS, BUMPY_ROADS, DATA_INFO, AREA_RADIUS_M, MARKTPLATZ
+from tabs.livability import WEIGHTS
+from tabs.map_tab import tracks_heatmap
+from tabs.translation import t
 
 
-# ═══ TAB 4: DASHBOARD ═══
+# ═══ TAB: DASHBOARD ═══
 def render():
-    lang = get_lang()
-
     st.header(t("dashboard_header"))
+    st.caption(t("dashboard_caption", sensors=DATA_INFO["sensors"], points=f"{DATA_INFO['points']:,}",
+                 first=DATA_INFO["first_day"], last=DATA_INFO["last_day"]))
 
+    # Key numbers
+    coolest = AREAS[AREAS["rank_temp"] == 1].iloc[0]
+    dirtiest = AREAS[AREAS["rank_air"] == len(AREAS)].iloc[0]
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric(t("sensors"), "15")
-    c2.metric(t("hot_days"), "12")
-    c3.metric(t("coolest_spot"), "Waldgebiet (26.2°C)")
-    c4.metric(t("worst_air"), "Industrie (28.4 µg/m³)")
+    c1.metric(t("areas_ranked"), len(AREAS))
+    c2.metric(t("sensor_bikes"), DATA_INFO["sensors"])
+    c3.metric(t("coolest_area"), coolest["label"], t("temp_vs_city", v=coolest["temp_anom"]), delta_color="inverse")
+    c4.metric(t("most_dust"), dirtiest["label"], t("pm_vs_city", v=dirtiest["pm25_anom"]), delta_color="inverse")
 
     st.divider()
 
-    # Temperature chart
-    fig1 = px.line(HOURLY_TEMPS.assign(type=HOURLY_TEMPS["type"].map(opt)), x="hour", y="temperature", color="type",
-                   title=t("chart_daily_temp"),
-                   labels={"temperature": "°C", "hour": t("hour"), "type": t("area_type")})
-    fig1.update_layout(height=350)
-    st.plotly_chart(fig1, use_container_width=True)
+    # Temperature and fine dust compared with the whole city at the same hour
+    col_temp, col_pm = st.columns(2)
 
-    # PM chart
-    col_pm, col_bar = st.columns(2)
+    with col_temp:
+        fig1 = px.bar(AREAS.sort_values("temp_anom"), x="label", y="temp_anom",
+                      color="temp_anom", color_continuous_scale="RdBu_r", color_continuous_midpoint=0,
+                      title=t("chart_temp_vs_city"),
+                      labels={"temp_anom": "°C", "label": t("area")})
+        fig1.update_layout(height=350, xaxis_tickangle=-45, coloraxis_showscale=False)
+        st.plotly_chart(fig1, width="stretch")
 
     with col_pm:
-        fig2 = px.line(HOURLY_PM.assign(type=HOURLY_PM["type"].map(opt)), x="hour", y="pm25", color="type",
-                       title=t("chart_pm"),
-                       labels={"pm25": "µg/m³", "hour": t("hour"), "type": t("area_type")})
-        fig2.update_layout(height=300)
-        st.plotly_chart(fig2, use_container_width=True)
+        fig2 = px.bar(AREAS.sort_values("pm25_anom"), x="label", y="pm25_anom",
+                      color="pm25_anom", color_continuous_scale=["#43a047", "#fb8c00", "#e53935"],
+                      title=t("chart_pm_vs_city"),
+                      labels={"pm25_anom": "µg/m³", "label": t("area")})
+        fig2.update_layout(height=350, xaxis_tickangle=-45, coloraxis_showscale=False)
+        st.plotly_chart(fig2, width="stretch")
 
-    with col_bar:
-        fig3 = px.bar(SENSORS.sort_values("temperature"), x="name", y="temperature",
-                      color="temperature", color_continuous_scale=["#2196f3", "#ff9800", "#f44336"],
-                      title=t("chart_temp_location"),
-                      labels={"name": t("location"), "temperature": "°C"})
-        fig3.update_layout(height=300, xaxis_tickangle=-45)
-        st.plotly_chart(fig3, use_container_width=True)
+    st.caption(t("gaps_tendency"))
 
     st.divider()
 
-    # Gap analysis
+    # Full ranking, with how the livability score is made (weights from livability.py)
+    st.subheader(t("ranking_header"))
+    st.caption(t("ranking_caption"))
+    total_w = sum(WEIGHTS.values())
+    parts = " + ".join(f"{w / total_w:.0%} {t('part_' + part)}" for part, w in WEIGHTS.items())
+    st.caption(t("livability_formula", parts=parts))
+    st.dataframe(
+        AREAS[["rank_overall", "area", "livability", "temp_anom", "temp_mean", "pm25_anom", "pm25_mean", "readings", "days"]],
+        column_config={
+            "rank_overall": t("col_rank"),
+            "area": t("area"),
+            "livability": st.column_config.ProgressColumn(t("livability"), min_value=0, max_value=100, format="%.0f"),
+            "temp_anom": st.column_config.NumberColumn(t("col_temp_diff"), format="%+.2f"),
+            "temp_mean": st.column_config.NumberColumn(t("col_temp_avg"), format="%.1f"),
+            "pm25_anom": st.column_config.NumberColumn(t("col_pm_diff"), format="%+.2f"),
+            "pm25_mean": st.column_config.NumberColumn(t("col_pm_avg"), format="%.1f"),
+            "readings": t("readings"),
+            "days": t("col_days"),
+        },
+        hide_index=True, width="stretch",
+    )
+
+    st.divider()
+
+    # Where action would help most
     st.subheader(t("needs_help"))
+    col_hot, col_dust, col_roads = st.columns(3)
 
-    col_gaps, col_recs = st.columns(2)
+    with col_hot:
+        st.markdown(t("help_warmest"))
+        for _, a in AREAS.sort_values("temp_anom", ascending=False).head(5).iterrows():
+            st.write(f"🔴 **{a['label']}** — {t('temp_vs_city', v=a['temp_anom'])}")
 
-    with col_gaps:
-        st.markdown(t("hottest_least_infra"))
-        hot = SENSORS[SENSORS["temperature"] > 33].sort_values("temperature", ascending=False)
-        for _, r in hot.iterrows():
-            st.write(f"🔴 **{r['name']}** — {r['temperature']}°C, {t('comfort')} {r['comfort']}/100")
+    with col_dust:
+        st.markdown(t("help_dust"))
+        for _, a in AREAS.sort_values("pm25_anom", ascending=False).head(5).iterrows():
+            st.write(f"🟠 **{a['label']}** — {t('pm_vs_city', v=a['pm25_anom'])}")
 
-    with col_recs:
-        st.markdown(t("recommendations"))
-        recs = [
-            t("rec_trees_industrie"),
-            t("rec_fountain_kaiser"),
-            t("rec_shade_bahnhof"),
-            t("rec_fix_pfuehl"),
-            t("rec_canopy_markt"),
-        ]
-        for r in recs:
-            st.write(r)
+    with col_roads:
+        st.markdown(t("help_bumpy"))
+        for r in sorted(BUMPY_ROADS, key=lambda r: r["avg_rough"], reverse=True)[:5]:
+            st.write(f"⚫ **{r['name']}** — {t('roughness', v=r['avg_rough'])}")
 
     st.divider()
 
-    # Sensor coverage map
-    st.subheader(t("coverage_header"))
-    st.write(t("coverage_intro"))
+    # Where the bikes measured: purple tracks heatmap + one circle per ranked area
+    st.subheader(t("where_measured"))
+    st.write(t("where_measured_intro"))
 
-    cov_map = folium.Map(location=[49.1427, 9.2109], zoom_start=14, tiles="OpenStreetMap")
-
-    for _, loc in SENSORS.iterrows():
-        # Coverage circle
+    cov_map = folium.Map(location=MARKTPLATZ, zoom_start=12, tiles="OpenStreetMap")
+    tracks_heatmap().add_to(cov_map)
+    for _, a in AREAS.iterrows():
         folium.Circle(
-            [loc["lat"], loc["lon"]],
-            radius=300,
-            color="#4caf50",
-            fill=True,
-            fill_opacity=0.15,
-            tooltip=f"{loc['name']} — {translate_sensor_type(loc['type'], lang)}"
+            [a["lat"], a["lon"]], radius=AREA_RADIUS_M,
+            color="#2e7d32", weight=2, fill=True, fill_opacity=0.1,
+            tooltip=t("coverage_tooltip", area=a["area"], readings=f"{a['readings']:,}", days=a["days"])
         ).add_to(cov_map)
-
-        # Sensor marker
-        folium.Marker(
-            [loc["lat"], loc["lon"]],
-            tooltip=f"📡 {loc['name']}",
-            icon=folium.Icon(color="green", icon="signal", prefix="fa")
-        ).add_to(cov_map)
-
-    # Mark areas with NO coverage as red zones
-    gap_zones = [
-        {"name": "Horkheim", "lat": 49.1250, "lon": 9.2000, "reason": t("gap_residential")},
-        {"name": "Frankenbach", "lat": 49.1650, "lon": 9.2100, "reason": t("gap_suburb")},
-        {"name": "Klingenberg", "lat": 49.1550, "lon": 9.2350, "reason": t("gap_highway")},
-        {"name": "Südstadt", "lat": 49.1330, "lon": 9.2150, "reason": t("gap_dense")},
-    ]
-
-    for gap in gap_zones:
-        folium.Circle(
-            [gap["lat"], gap["lon"]],
-            radius=400,
-            color="#f44336",
-            fill=True,
-            fill_opacity=0.2,
-            tooltip=f"⚠️ {t('gap')}: {gap['name']} — {gap['reason']}"
-        ).add_to(cov_map)
-
-        folium.Marker(
-            [gap["lat"], gap["lon"]],
-            tooltip=f"⚠️ {gap['name']}: {gap['reason']}",
-            icon=folium.Icon(color="red", icon="exclamation-triangle", prefix="fa")
-        ).add_to(cov_map)
-
-    st_folium(cov_map, height=450, use_container_width=True)
-
-    st.markdown(t("coverage_legend"))
+    st_folium(cov_map, height=450, use_container_width=True, key="coverage_map")

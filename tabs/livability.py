@@ -6,8 +6,8 @@ Each part is a score from 0 (bad) to 100 (good). Change WEIGHTS to give a part
 more or less say; they are scaled to add up to 1, so any numbers work.
 To add a part later (e.g. amenities): compute a "score_<part>" column and add it to WEIGHTS.
 """
-from real_data import AREAS, BIKE_STREETS, BUMPY_ROADS, AREA_RADIUS_M, distance_m
-from routing import route_from_area_to_nearest_bike_street
+from tabs.real_data import AREAS, BIKE_STREETS, BUMPY_ROADS, AREA_RADIUS_M, distance_m
+from tabs.routing import route_from_area_to_nearest_bike_street
 
 WEIGHTS = {"air": 0.4, "heat": 0.4, "bike": 0.2}
 
