@@ -1,18 +1,45 @@
+"""⭐ Rate & Report tab: rate a spot, suggest an improvement, and the Community Ideas Board.
+
+The forms are a demo (nothing is saved yet). The ideas board shows five example ideas;
+their texts are in translation.py (keys idea1_... to idea5_...).
+"""
 from pathlib import Path
 
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from dummy_data import SENSORS, RATINGS
-from translation import t, opt, get_lang, RATING_COMMENTS_DE
+from tabs.community_examples import RATINGS
+from tabs.real_data import AREA_NAMES
+from tabs.translation import t, opt, get_lang, RATING_COMMENTS_DE
 
+# tabs/rate_report_tab.py -> project root -> images/
 IMAGES_DIR = Path(__file__).resolve().parent.parent / "images"
 
 
-# ═══ TAB 3: RATE & REPORT ═══
-def render():
-    lang = get_lang()
+def idea_header(emoji, title, badge, badge_color, meta, background):
+    """Colored title bar of an idea on the ideas board."""
+    st.markdown(f"""
+    <div style="background: {background}; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 1.5rem;">{emoji}</span>
+            <span style="font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem; color: #111;">{title}</span>
+            <span style="background: {badge_color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: auto;">{badge}</span>
+        </div>
+        <p style="color: #555; font-size: 0.85rem;">{meta}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
+
+def idea_buttons(n, votes, comments):
+    """Vote, comment and map buttons under an idea."""
+    c1, c2, c3 = st.columns(3)
+    c1.button(t("n_votes", n=votes), key=f"vote_{n}", width="stretch")
+    c2.button(t("n_comments", n=comments), key=f"comment_{n}", width="stretch")
+    c3.button(t("show_on_map"), key=f"map_{n}", width="stretch")
+
+
+# ═══ TAB: RATE & REPORT ═══
+def render():
     st.header(t("rate_header"))
 
     rate_tab, ideas_tab = st.tabs([t("subtab_rate"), t("subtab_ideas")])
@@ -24,29 +51,28 @@ def render():
         with col_form:
             st.subheader(t("rate_spot"))
             with st.form("rate_form"):
-                spot = st.selectbox(t("select_spot"), SENSORS["name"].tolist(), key="rate_spot")
-                rating = st.slider(t("rating"), 1, 5, 3, format="%d ⭐", key="rate_rating")
-                comment = st.text_area(t("your_experience"), key="rate_comment")
+                spot = st.selectbox(t("select_spot"), AREA_NAMES)
+                rating = st.slider(t("rating"), 1, 5, 3, format="%d ⭐")
+                comment = st.text_area(t("your_experience"))
 
-                report = st.checkbox(t("report_issue"), key="rate_report")
+                report = st.checkbox(t("report_issue"))
                 if report:
                     issue = st.selectbox(t("issue"),
                         ["Broken fountain", "No shade", "Trash", "Unsafe", "Needs seating", "Needs water"],
-                        format_func=opt, key="rate_issue")
+                        format_func=opt)
 
-                if st.form_submit_button(t("submit"), use_container_width=True):
+                if st.form_submit_button(t("submit"), width="stretch"):
                     st.success(t("thanks_demo"))
 
             st.subheader(t("suggest_improvement"))
             with st.form("suggest_form"):
                 suggestion = st.selectbox(t("whats_needed"),
                     ["More trees", "Water fountain", "Cooling station", "Benches", "Better lighting",
-                     "Pet water station", "Sensor box", "Mist cooling zone"],
-                    format_func=opt, key="suggest_what")
-                where = st.selectbox(t("where"), SENSORS["name"].tolist(), key="suggest_where")
+                     "Pet water station", "Sensor box", "Mist cooling zone"], format_func=opt)
+                where = st.selectbox(t("where"), AREA_NAMES, key="suggest_where")
                 urgency = st.select_slider(t("urgency"), ["Nice to have", "Would help", "Needed", "Urgent"],
-                                           format_func=opt, key="suggest_urgency")
-                if st.form_submit_button(t("submit_suggestion"), use_container_width=True):
+                                           format_func=opt)
+                if st.form_submit_button(t("submit_suggestion"), width="stretch"):
                     st.success(t("recorded_demo"))
 
         with col_reviews:
@@ -54,21 +80,23 @@ def render():
             for r in RATINGS:
                 stars = "⭐" * int(r["rating"])
                 label = t("label_great") if r["rating"] >= 4 else t("label_ok") if r["rating"] >= 3 else t("label_avoid")
-                comment = RATING_COMMENTS_DE.get(r["spot"], r["comment"]) if lang == "de" else r["comment"]
+                rating_comment = r["comment"]
+                if get_lang() == "de":
+                    rating_comment = RATING_COMMENTS_DE.get(r["spot"], rating_comment)
                 st.markdown(f"**{r['spot']}** {stars} ({r['rating']}/5 · {r['reviews']} {t('reviews')})")
-                st.caption(f'"{comment}" {label}')
+                st.caption(f'"{rating_comment}" {label}')
                 st.divider()
 
             st.subheader(t("most_requested"))
+            needs = ["Trees", "Fountains", "Benches", "Cooling", "Pet Water", "Sensors"]
             fig = px.bar(
-                pd.DataFrame({"Need": [opt(n) for n in ["Trees", "Fountains", "Benches", "Cooling", "Pet Water", "Sensors"]],
-                              "Votes": [45, 38, 31, 22, 18, 15]}),
+                pd.DataFrame({"Need": [opt(n) for n in needs], "Votes": [45, 38, 31, 22, 18, 15]}),
                 x="Votes", y="Need", orientation="h", color="Votes",
                 color_continuous_scale=["#c8e6c9", "#2e7d32"],
                 labels={"Need": t("need"), "Votes": t("votes")}
             )
             fig.update_layout(height=280, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width="stretch")
 
     # ─── Sub-tab: Community Ideas Board ───
     with ideas_tab:
@@ -78,15 +106,14 @@ def render():
         # Post your idea form
         with st.expander(t("post_idea"), expanded=False):
             with st.form("idea_form"):
-                idea_title = st.text_input(t("idea_title"), placeholder=t("idea_title_placeholder"), key="idea_title")
+                idea_title = st.text_input(t("idea_title"), placeholder=t("idea_title_placeholder"))
                 idea_category = st.selectbox(t("category"),
                     ["Cooling Infrastructure", "Water & Drinking Fountains", "Sensor Network",
-                     "Green Spaces", "Pet Friendly", "Accessibility", "Other"],
-                    format_func=opt, key="idea_category")
-                idea_location = st.selectbox(t("suggested_location"), SENSORS["name"].tolist(), key="idea_loc")
-                idea_desc = st.text_area(t("describe_idea"), placeholder=t("describe_idea_placeholder"), key="idea_desc")
-                idea_image = st.file_uploader(t("upload_photo"), type=["png", "jpg", "jpeg"], key="idea_image")
-                if st.form_submit_button(t("post_idea_btn"), use_container_width=True):
+                     "Green Spaces", "Pet Friendly", "Accessibility", "Other"], format_func=opt)
+                idea_location = st.selectbox(t("suggested_location"), AREA_NAMES, key="idea_loc")
+                idea_desc = st.text_area(t("describe_idea"), placeholder=t("describe_idea_placeholder"))
+                idea_image = st.file_uploader(t("upload_photo"), type=["png", "jpg", "jpeg"])
+                if st.form_submit_button(t("post_idea_btn"), width="stretch"):
                     st.success(t("idea_posted"))
 
         st.divider()
@@ -94,17 +121,8 @@ def render():
         # ─── Existing community ideas ───
 
         # IDEA 1: Cooling Wall
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 1.5rem;">🧊</span>
-                <span style="font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem; color: #111;">{t('idea1_title')}</span>
-                <span style="background: #2196f3; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: auto;">{opt('Cooling Infrastructure')}</span>
-            </div>
-            <p style="color: #555; font-size: 0.85rem;">{t('idea1_meta')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+        idea_header("🧊", t("idea1_title"), opt("Cooling Infrastructure"), "#2196f3", t("idea1_meta"),
+                    "linear-gradient(135deg, #e3f2fd, #bbdefb)")
         col_img1, col_desc1 = st.columns([1, 2])
         with col_img1:
             st.markdown(f"""
@@ -117,34 +135,18 @@ def render():
             """, unsafe_allow_html=True)
         with col_desc1:
             st.markdown(t("idea1_body"))
-            c1, c2, c3 = st.columns(3)
-            c1.button(t("n_votes", n=47), key="vote_1", use_container_width=True)
-            c2.button(t("n_comments", n=12), key="comment_1", use_container_width=True)
-            c3.button(t("show_on_map"), key="map_1", use_container_width=True)
+            idea_buttons(1, 47, 12)
 
         st.divider()
 
         # IDEA 2: Lamp Post Sensors
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 1.5rem;">📡</span>
-                <span style="font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem; color: #111;">{t('idea2_title')}</span>
-                <span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: auto;">{opt('Sensor Network')}</span>
-            </div>
-            <p style="color: #555; font-size: 0.85rem;">{t('idea2_meta')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+        idea_header("📡", t("idea2_title"), opt("Sensor Network"), "#ff9800", t("idea2_meta"),
+                    "linear-gradient(135deg, #fff3e0, #ffe0b2)")
         col_img2, col_desc2 = st.columns([1, 2])
         with col_img2:
-            lamp_img = "smart-lamp-post-de.svg" if lang == "de" else "smart-lamp-post.svg"
-            try:
-                st.image(str(IMAGES_DIR / lamp_img), use_container_width=True)
-            except:
-                st.info(t("image_missing", file=lamp_img))
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #e65100, #ff9800); border-radius: 10px; padding: 1rem; text-align: center; color: white;">
+            <div style="background: linear-gradient(135deg, #e65100, #ff9800); border-radius: 10px; padding: 1rem; text-align: center; color: white; min-height: 200px;">
+                <div style="font-size: 2rem; margin-bottom: 0.3rem;">🏮</div>
                 <div style="font-size: 0.9rem; font-weight: bold;">{t('idea2_card_title')}</div>
                 <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 0.5rem; margin: 0.5rem 0; text-align: left; font-size: 0.75rem;">
                     {t('idea2_card_list')}
@@ -156,25 +158,13 @@ def render():
             """, unsafe_allow_html=True)
         with col_desc2:
             st.markdown(t("idea2_body"))
-            c1, c2, c3 = st.columns(3)
-            c1.button(t("n_votes", n=63), key="vote_2", use_container_width=True)
-            c2.button(t("n_comments", n=21), key="comment_2", use_container_width=True)
-            c3.button(t("show_on_map"), key="map_2", use_container_width=True)
+            idea_buttons(2, 63, 21)
 
         st.divider()
 
         # IDEA 3: Pet-Friendly Water Stations
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 1.5rem;">🐕</span>
-                <span style="font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem; color: #111;">{t('idea3_title')}</span>
-                <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: auto;">{opt('Pet Friendly')}</span>
-            </div>
-            <p style="color: #555; font-size: 0.85rem;">{t('idea3_meta')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+        idea_header("🐕", t("idea3_title"), opt("Pet Friendly"), "#4caf50", t("idea3_meta"),
+                    "linear-gradient(135deg, #e8f5e9, #c8e6c9)")
         col_img3, col_desc3 = st.columns([1, 2])
         with col_img3:
             st.markdown(f"""
@@ -192,25 +182,13 @@ def render():
             """, unsafe_allow_html=True)
         with col_desc3:
             st.markdown(t("idea3_body"))
-            c1, c2, c3 = st.columns(3)
-            c1.button(t("n_votes", n=52), key="vote_3", use_container_width=True)
-            c2.button(t("n_comments", n=18), key="comment_3", use_container_width=True)
-            c3.button(t("show_on_map"), key="map_3", use_container_width=True)
+            idea_buttons(3, 52, 18)
 
         st.divider()
 
         # IDEA 4: Kids Tree Planting Initiative
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #e8f5e9, #a5d6a7); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 1.5rem;">🌱</span>
-                <span style="font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem; color: #111;">{t('idea4_title')}</span>
-                <span style="background: #43a047; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: auto;">{opt('Kids Initiative')}</span>
-            </div>
-            <p style="color: #555; font-size: 0.85rem;">{t('idea4_meta')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+        idea_header("🌱", t("idea4_title"), opt("Kids Initiative"), "#43a047", t("idea4_meta"),
+                    "linear-gradient(135deg, #e8f5e9, #a5d6a7)")
         col_img4, col_desc4 = st.columns([1, 2])
         with col_img4:
             st.markdown(f"""
@@ -239,37 +217,22 @@ def render():
             """, unsafe_allow_html=True)
         with col_desc4:
             st.markdown(t("idea4_body"))
-            c1, c2, c3 = st.columns(3)
-            c1.button(t("n_votes", n=203), key="vote_4", use_container_width=True)
-            c2.button(t("n_comments", n=67), key="comment_4", use_container_width=True)
-            c3.button(t("show_on_map"), key="map_4", use_container_width=True)
+            idea_buttons(4, 203, 67)
             st.caption(t("idea4_top_comment"))
 
         st.divider()
 
         # IDEA 5: Elderly Crochet Shade Canopy
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #fff8e1, #ffecb3); padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
-            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                <span style="font-size: 1.5rem;">🧶</span>
-                <span style="font-weight: bold; font-size: 1.2rem; margin-left: 0.5rem; color: #111;">{t('idea5_title')}</span>
-                <span style="background: #f9a825; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; margin-left: auto;">{opt('Community Project')}</span>
-            </div>
-            <p style="color: #555; font-size: 0.85rem;">{t('idea5_meta')}</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+        idea_header("🧶", t("idea5_title"), opt("Community Project"), "#f9a825", t("idea5_meta"),
+                    "linear-gradient(135deg, #fff8e1, #ffecb3)")
         col_img5, col_desc5 = st.columns([1, 2])
         with col_img5:
             try:
-                st.image(str(IMAGES_DIR / "canopy-5.jpg"), use_container_width=True)
-            except:
+                st.image(str(IMAGES_DIR / "canopy-5.jpg"), width="stretch")
+            except Exception:
                 st.info(t("image_missing", file="canopy-5.jpg"))
             st.caption(t("idea5_caption"))
         with col_desc5:
             st.markdown(t("idea5_body"))
-            c1, c2, c3 = st.columns(3)
-            c1.button(t("n_votes", n=112), key="vote_5", use_container_width=True)
-            c2.button(t("n_comments", n=43), key="comment_5", use_container_width=True)
-            c3.button(t("show_on_map"), key="map_5", use_container_width=True)
+            idea_buttons(5, 112, 43)
             st.caption(t("idea5_top_comment"))

@@ -1,82 +1,58 @@
+"""👥 Community tab: create a meetup and browse upcoming meetups (demo, nothing is saved yet)."""
 import streamlit as st
-from dummy_data import SENSORS, MEETUPS
-from translation import t, opt, get_lang, MEETUPS_DE
+from tabs.community_examples import MEETUPS
+from tabs.real_data import AREA_NAMES
+from tabs.translation import t, opt, get_lang, MEETUPS_DE
+
+ACTIVITY_EMOJIS = {"Jogging": "🏃", "Walking": "🚶", "Cycling": "🚴", "Yoga": "🧘"}  # anything else gets 📍
 
 
-# ═══ TAB 2: COMMUNITY ═══
+# ═══ TAB: COMMUNITY ═══
 def render():
-    lang = get_lang()
-    if "meetups" not in st.session_state:
-        st.session_state.meetups = [dict(mu) for mu in MEETUPS]
-    if "joined_ids" not in st.session_state:
-        st.session_state.joined_ids = set()
-
     st.header(t("community_header"))
 
     col_create, col_browse = st.columns([1, 2])
 
+    # Left: form to create a meetup
     with col_create:
         st.subheader(t("create_meetup"))
         with st.form("meetup_form"):
-            title = st.text_input(t("title"), placeholder=t("title_placeholder"), key="meetup_title")
+            title = st.text_input(t("title"), placeholder=t("title_placeholder"))
             activity = st.selectbox(t("activity"), ["Jogging", "Walking", "Cycling", "Yoga", "Workout", "Other"],
-                                    format_func=opt, key="meetup_activity")
+                                    format_func=opt)
             col_d, col_t = st.columns(2)
             with col_d:
-                date = st.date_input(t("date"), key="meetup_date")
+                date = st.date_input(t("date"))
             with col_t:
-                time = st.time_input(t("time"), key="meetup_time")
-            point = st.selectbox(t("meeting_point"), SENSORS["name"].tolist(), key="meetup_point")
-            max_p = st.slider(t("max_participants"), 2, 50, 15, key="meetup_max")
-            desc = st.text_area(t("description"), key="meetup_desc")
-            if st.form_submit_button(t("create_meetup_btn"), use_container_width=True):
-                if not title.strip():
-                    st.error(t("title_missing"))
+                time = st.time_input(t("time"))
+            point = st.selectbox(t("meeting_point"), AREA_NAMES)
+            max_p = st.slider(t("max_participants"), 2, 50, 15)
+            desc = st.text_area(t("description"))
+            if st.form_submit_button(t("create_meetup_btn"), width="stretch"):
+                if title:
+                    st.success(t("meetup_created", title=title) + " (Demo)")
                 else:
-                    new_id = max((m["id"] for m in st.session_state.meetups), default=0) + 1
-                    st.session_state.meetups.insert(0, {
-                        "id": new_id,
-                        "title": title.strip(),
-                        "activity": activity,
-                        "organizer": "You",
-                        "date": date.strftime("%Y-%m-%d"),
-                        "time": time.strftime("%H:%M"),
-                        "point": point,
-                        "joined": 1,
-                        "max": max_p,
-                        "desc": desc.strip(),
-                    })
-                    st.session_state.joined_ids.add(new_id)
-                    st.success(t("meetup_created", title=title))
+                    st.warning(t("title_missing"))
 
+    # Right: list of example meetups (German text from MEETUPS_DE when DE is on)
     with col_browse:
         st.subheader(t("upcoming_meetups"))
 
-        emojis = {"Jogging": "🏃", "Walking": "🚶", "Cycling": "🚴", "Yoga": "🧘"}
-
-        for mu in st.session_state.meetups:
-            emoji = emojis.get(mu["activity"], "📍")
+        for mu in MEETUPS:
+            emoji = ACTIVITY_EMOJIS.get(mu["activity"], "📍")
             spots_left = mu["max"] - mu["joined"]
-            is_demo = mu["organizer"] != "You"
             mu_title, mu_desc = mu["title"], mu["desc"]
-            if lang == "de" and is_demo and mu["id"] in MEETUPS_DE:
+            if get_lang() == "de" and mu["id"] in MEETUPS_DE:
                 mu_title, mu_desc = MEETUPS_DE[mu["id"]]
-            organizer = mu["organizer"] if is_demo else t("you")
 
             st.markdown(f"""
             ### {emoji} {mu_title}
             📅 {t('date_at_time', date=mu['date'], time=mu['time'])} | 📍 {mu['point']}
             {mu_desc}
             👤 **{mu['joined']}/{mu['max']}** {t('joined_count', n=spots_left)}
-            *{t('organized_by', name=organizer)}*
+            *{t('organized_by', name=mu['organizer'])}*
             """)
 
-            if mu["id"] in st.session_state.joined_ids:
-                st.button(t("joined"), key=f"join_{mu['id']}", disabled=True)
-            elif spots_left <= 0:
-                st.button(t("full"), key=f"join_{mu['id']}", disabled=True)
-            elif st.button(t("join_event"), key=f"join_{mu['id']}"):
-                mu["joined"] += 1
-                st.session_state.joined_ids.add(mu["id"])
-                st.rerun()
+            if st.button(t("join_event"), key=f"join_{mu['id']}"):
+                st.success(t("joined") + " (Demo)")
             st.divider()
