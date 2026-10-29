@@ -54,11 +54,12 @@ def render_months():
     grid = (ok_months.pivot(index="area", columns="month", values="livability")
             .reindex(columns=months)  # months without any data stay as "–" columns
             .rename(columns=names))
+    # first column: all months together; rows sorted from most to least livable
     grid.insert(0, t("all_months_col"), AREAS.set_index("area")["livability"])
     grid = grid.reindex(AREAS.sort_values("livability", ascending=False)["area"])
     st.markdown(t("livability_per_month"))
     st.dataframe(grid.style.map(grid_color).format("{:.0f}", na_rep="–"), width="stretch",
-                 height=35 * (len(grid) + 1) + 3)
+                 height=35 * (len(grid) + 1) + 3)  # tall enough to show every row without scrolling
 
     # One area over the months
     st.markdown(t("one_area"))
@@ -105,6 +106,7 @@ def render():
 
     # Key numbers
     st.subheader(t("overall_result", period=period_label(ALL_MONTHS)))
+    # rank 1 = coolest; the last air rank = most fine dust
     coolest = AREAS[AREAS["rank_temp"] == 1].iloc[0]
     dirtiest = AREAS[AREAS["rank_air"] == len(AREAS)].iloc[0]
     c1, c2, c3, c4 = st.columns(4)

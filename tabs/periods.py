@@ -40,6 +40,7 @@ def period_label(period):
 def totals_for(period):
     """Readings, sensors, first_day and last_day of the period."""
     if period == ALL_MONTHS:
+        # DATA_INFO calls the number of readings "points"; a month calls it "readings"
         return {**DATA_INFO, "readings": DATA_INFO["points"]}
     return DATA_INFO["month_totals"][period]
 
@@ -49,6 +50,7 @@ def areas_for(period):
     if period == ALL_MONTHS:
         return AREAS.assign(enough_data=True)
     month = MONTHS[MONTHS["month"] == period]
+    # start from every area center, so areas without data that month still show (grey on the map)
     centers = AREAS[["area", "label", "lat", "lon"]]
     table = centers.merge(month.drop(columns=["label", "lat", "lon"]), on="area", how="left")
     table["enough_data"] = table["enough_data"].eq(True)  # areas without a row that month -> False

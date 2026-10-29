@@ -203,7 +203,7 @@ def render(period, show_real, real_by, show_tracks, show_bike_streets, show_acce
     with col_map:
         # Determine map center and zoom
         selected = st.session_state.selected_spot
-        selected_row = view[view["area"] == selected].iloc[0] if selected else None
+        selected_row = view[view["area"] == selected].iloc[0] if selected else None  # its results for the period
         if selected:
             m = folium.Map(location=[selected_row["lat"], selected_row["lon"]], zoom_start=15, tiles="OpenStreetMap")
         else:
@@ -302,11 +302,13 @@ def render(period, show_real, real_by, show_tracks, show_bike_streets, show_acce
         result = st_folium(m, height=550, use_container_width=True,
                            returned_objects=["last_object_clicked", "last_object_clicked_tooltip"])
 
-        # A new click on a bike street: remember it and redraw the map with its route
+        # A new click on a bike street: remember it and redraw the map with its route.
+        # st_folium returns the last click again on every rerun, so a click is only handled when it changed.
         tip = (result or {}).get("last_object_clicked_tooltip") or ""
         click = (tip, str((result or {}).get("last_object_clicked")))
         if click != st.session_state.last_click:
             st.session_state.last_click = click
+            # folium sends the tooltip as HTML, so "&" arrives as "&amp;"
             clicked = next((b["name"] for b in BIKE_STREETS
                             if tip.startswith("🚲") and b["name"] in tip.replace("&amp;", "&")), None)
             if clicked and clicked != st.session_state.selected_bike:
@@ -317,7 +319,7 @@ def render(period, show_real, real_by, show_tracks, show_bike_streets, show_acce
         # Explain the route under the map
         if route:
             start = st.session_state.selected_bike
-            if route["length_m"] < 50:
+            if route["length_m"] < 50:  # the two streets (almost) touch
                 st.success(t("route_direct", start=start, target=route["target"]))
             else:
                 via = ", ".join(route["streets"]) or t("small_paths")

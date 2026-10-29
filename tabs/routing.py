@@ -21,7 +21,7 @@ GRAPH = nx.Graph()
 STREET_NODES = {}  # street name -> all crossings on that street
 for names, wkt in zip(NETWORK["names"], NETWORK["geometry_wkt"]):
     points = parse_linestring(wkt)
-    a, b = node(points[0]), node(points[-1])
+    a, b = node(points[0]), node(points[-1])  # the piece's two end crossings
     for name in names:
         STREET_NODES.setdefault(name, set()).update([a, b])
     length = line_length_m(points)
@@ -59,12 +59,14 @@ def route_to_nearest_bike_street(street_name):
     if not sources or not goals:
         return None
 
+    # one search from all crossings of the start street at once; costs and paths cover every reachable crossing
     costs, paths = nx.multi_source_dijkstra(GRAPH, sources, weight="cost")
     reachable = [n for n in goals if n in costs]
     if not reachable:
         return None
     goal = min(reachable, key=lambda n: costs[n])
 
+    # the start and target streets are left out of the "via" list
     ends = set(street_name.split(" & ")) | set(goals[goal].split(" & "))
     return describe_route(paths[goal], goals[goal], ends)
 
@@ -112,6 +114,7 @@ def route_from_area_to_nearest_bike_street(lat, lon, radius_m):
     """
     start_street, costs, paths = routes_from_all_bike_streets()
     center = (lat, lon)
+    # all crossings inside the area's circle
     inside = [n for n in GRAPH.nodes if distance_m(*center, *n) <= radius_m]
     if not inside:
         inside = [min(GRAPH.nodes, key=lambda n: distance_m(*center, *n))]

@@ -48,6 +48,7 @@ st.markdown("""
 [data-baseweb="tab-list"], [data-baseweb="tab-panel"] { background: transparent; }
 </style>
 """, unsafe_allow_html=True)
+# ENG / DE switch, placed by the .st-key-lang_switch CSS above; t() reads its value (key "lang_de")
 with st.container(key="lang_switch"):
     st.toggle("ENG / DE", key="lang_de", help="English ⇄ Deutsch")
 
@@ -66,7 +67,7 @@ with st.sidebar:
 
     st.subheader(t("map_layers"))
     show_real = st.checkbox(t("layer_real"), value=True)
-    real_by = "livability"
+    real_by = "livability"  # default when the real-data layer is off
     if show_real:
         real_by = st.radio(t("color_by"), ["livability", "temperature", "pm25"],
                            format_func=lambda key: t(f"color_{key}"))
@@ -76,6 +77,7 @@ with st.sidebar:
     show_bike_streets = st.checkbox(t("layer_bike_streets"), value=True)
     show_access = st.checkbox(t("layer_access"), value=False)
     show_bumpy = st.checkbox(t("layer_bumpy"), value=True)
+    # bumpy roads whose name is not in the road network can't be drawn
     missing = len(BUMPY_ROADS) - len(BUMPY_ON_MAP)
     if show_bumpy and missing:
         st.caption(t("bumpy_missing", missing=missing, total=len(BUMPY_ROADS)))
@@ -96,6 +98,7 @@ tab_home, tab_map, tab_community, tab_rate, tab_dashboard = st.tabs(
 st.session_state.open_tab = next(i for i, tab in enumerate(
     [tab_home, tab_map, tab_community, tab_rate, tab_dashboard]) if tab.open)
 
+# Draw only the open tab (see above)
 if tab_home.open:
     with tab_home:
         home_tab.render()

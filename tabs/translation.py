@@ -621,6 +621,7 @@ OPTIONS_DE = {
 }
 
 # ─── German versions of the demo data texts ───
+# meetup id -> (title, description), see community_examples.py
 MEETUPS_DE = {
     1: ("Morgenlauf am Neckar", "Früher Morgenlauf am Fluss entlang, bevor die Hitze kommt. ca. 5 km."),
     2: ("Yoga im Park", "Yoga im Freien im Schatten. Bring deine eigene Matte mit!"),
@@ -628,6 +629,7 @@ MEETUPS_DE = {
     4: ("Radtour im Wald", "Schattige Waldstrecke. ca. 10 km, mittelschwer."),
 }
 
+# spot name -> comment, see RATINGS in community_examples.py
 RATING_COMMENTS_DE = {
     "Waldgebiet Jaegerhaus": "Kühlster Ort der Stadt",
     "Wertwiesenpark": "Viel Schatten, immer ein laues Lüftchen",
@@ -659,14 +661,17 @@ def translate_option(value, lang):
 
 # ─── Shortcuts for the current page language (set by the ENG / DE switch, key "lang_de") ───
 def get_lang():
+    """"de" when the ENG / DE switch is on, else "en"."""
     return "de" if st.session_state.get("lang_de") else "en"
 
 
 def t(key, **kwargs):
+    """Text for key in the page language, e.g. t("selected", name="Flein")."""
     return translate(key, get_lang(), **kwargs)
 
 
 def opt(value):
+    """Dropdown option in the page language (used as format_func in selectboxes)."""
     return translate_option(value, get_lang())
 
 

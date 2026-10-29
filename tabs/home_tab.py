@@ -46,6 +46,7 @@ def render():
     # Highlights: best areas in the measurements
     st.subheader(t("home_highlights"))
     st.caption(t("vs_city_now"))
+    # the best area in each measure, all months together
     coolest = AREAS.loc[AREAS["temp_anom"].idxmin()]
     cleanest = AREAS.loc[AREAS["pm25_anom"].idxmin()]
     most_livable = AREAS.loc[AREAS["livability"].idxmax()]

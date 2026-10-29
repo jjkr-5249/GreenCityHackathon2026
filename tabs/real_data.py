@@ -21,7 +21,7 @@ def distance_m(lat1, lon1, lat2, lon2):
     """Distance in meters between two points on Earth (haversine formula)."""
     lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
     a = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
-    return 2 * 6371000 * asin(sqrt(a))
+    return 2 * 6371000 * asin(sqrt(a))  # 6371000 = Earth's radius in meters
  
  
 def line_length_m(line):
@@ -84,9 +84,8 @@ def split_names(name):
     return [name]
  
  
-#   names   the piece's street names as a list
+#   names the piece's street names as a list
 NETWORK["names"] = NETWORK["name"].map(split_names)
- 
  
 def parse_linestring(wkt):
     """'LINESTRING (9.15 49.11, 9.16 49.12)' -> [[49.11, 9.15], [49.12, 9.16]] (lat first, for folium)."""
@@ -191,6 +190,7 @@ def is_ridden(lat, lon):
 def ridden_share(line):
     """Part of the piece (0 to 1) that lies on ridden cells, checked every SAMPLE_M meters."""
     samples = []
+    # walk along each straight part between two points and take a sample every SAMPLE_M meters
     for p, q in zip(line, line[1:]):
         steps = max(1, int(distance_m(*p, *q) // SAMPLE_M))
         for i in range(steps):
@@ -200,6 +200,7 @@ def ridden_share(line):
     return sum(is_ridden(*s) for s in samples) / len(samples)
  
  
+# All pieces of all bumpy roads, so a bike street piece that is also a bumpy road can be left out
 BUMPY_LINES = [line for road in BUMPY_ROADS for line in road["lines"]]
  
 # Add to each bike street

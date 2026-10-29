@@ -28,6 +28,7 @@ def render():
             point = st.selectbox(t("meeting_point"), AREA_NAMES)
             max_p = st.slider(t("max_participants"), 2, 50, 15)
             desc = st.text_area(t("description"))
+            # demo: only shows a message, the meetup is not stored
             if st.form_submit_button(t("create_meetup_btn"), width="stretch"):
                 if title:
                     st.success(t("meetup_created", title=title) + " (Demo)")
@@ -54,6 +55,7 @@ def render():
                 f"*{t('organized_by', name=mu['organizer'])}*"
             )
 
+            # each button needs its own key, so the meetup id is part of it
             if st.button(t("join_event"), key=f"join_{mu['id']}"):
                 st.success(t("joined") + " (Demo)")
             st.divider()

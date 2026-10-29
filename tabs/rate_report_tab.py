@@ -31,7 +31,7 @@ def idea_header(emoji, title, badge, badge_color, meta, background):
 
 
 def idea_buttons(n, votes, comments):
-    """Vote, comment and map buttons under an idea."""
+    """Vote, comment and map buttons under an idea (demo: they don't do anything yet)."""
     c1, c2, c3 = st.columns(3)
     c1.button(t("n_votes", n=votes), key=f"vote_{n}", width="stretch")
     c2.button(t("n_comments", n=comments), key=f"comment_{n}", width="stretch")
@@ -87,6 +87,7 @@ def render():
                 st.divider()
 
             st.subheader(t("most_requested"))
+            # example vote counts (demo data)
             needs = ["Trees", "Fountains", "Benches", "Cooling", "Pet Water", "Sensors"]
             fig = px.bar(
                 pd.DataFrame({"Need": [opt(n) for n in needs], "Votes": [45, 38, 31, 22, 18, 15]}),
@@ -226,6 +227,7 @@ def render():
                     "linear-gradient(135deg, #fff8e1, #ffecb3)")
         col_img5, col_desc5 = st.columns([1, 2])
         with col_img5:
+            # show a note instead of an error if the image file is missing
             try:
                 st.image(str(IMAGES_DIR / "canopy-5.jpg"), width="stretch")
             except Exception:

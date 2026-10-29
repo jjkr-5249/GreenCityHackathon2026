@@ -62,6 +62,7 @@ def add_scores(table, bike_scores=None):
         table["score_bike"] = table.apply(bike_score, axis=1)
     else:
         table["score_bike"] = table["area"].map(bike_scores)
+    # weighted average of the parts (weights scaled to add up to 1)
     total_weight = sum(WEIGHTS.values())
     table["livability"] = sum(table[f"score_{part}"] * w for part, w in WEIGHTS.items()) / total_weight
 
@@ -73,6 +74,7 @@ add_scores(MONTHS, bike_scores=AREAS.set_index("area")["score_bike"])
 
 def mix(color_a, color_b, t):
     """Color between color_a (t=0) and color_b (t=1), both like "#rrggbb"."""
+    # "#rrggbb" -> [r, g, b] as numbers 0-255
     a = [int(color_a[i:i + 2], 16) for i in (1, 3, 5)]
     b = [int(color_b[i:i + 2], 16) for i in (1, 3, 5)]
     return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(a, b))

@@ -37,17 +37,20 @@ def load_readings():
             "Temperature": "temp", "Rel. Humidity": "humidity", "Finedust PM2.5": "pm25", "Finedust PM10": "pm10"}
     raw = pd.read_csv(DIR / "osem_bike_data.csv", usecols=list(cols)).rename(columns=cols)
     raw["time"] = pd.to_datetime(raw["time"], format="ISO8601")
-    counts = {"raw_rows": len(raw)}
+    counts = {"raw_rows": len(raw)}  # readings left after each step, shown in the app
 
+    # step 1: needed values and start date
     d = raw.dropna(subset=["temp", "pm25", "lat", "lon"])
     d = d[d["time"] >= START_DATE]
     counts["with_values_from_start"] = len(d)
+    # steps 2 and 3: drop humid air and impossible PM2.5 values
     d = d[d["humidity"] <= MAX_HUMIDITY]
     counts["after_humidity_rule"] = len(d)
     d = d[d["pm25"] <= MAX_PM25]
     counts["after_pm25_rule"] = len(d)
 
-    # nearest area center (flat-earth distance is accurate enough at this scale)
+    # step 4: nearest area center (flat-earth distance is accurate enough at this scale)
+    # dist has one row per reading and one column per area center
     centers = pd.read_csv(DIR / "area_centers.csv")
     km_per_deg_lon = 111.2 * np.cos(np.radians(centers["lat"].mean()))
     dlat = (d["lat"].values[:, None] - centers["lat"].values) * 111.2
@@ -60,6 +63,7 @@ def load_readings():
     d["temp_anom"] = d["temp"] - d.groupby("hour")["temp"].transform("median")
     d["pm25_anom"] = d["pm25"] - d.groupby("hour")["pm25"].transform("median")
 
+    # step 4: keep only readings close enough to their area center
     d = d[d["km"] <= MAX_KM].copy()
     counts["in_areas"] = len(d)
     d["day"] = d["time"].dt.date
@@ -96,6 +100,7 @@ def add_ranks(table):
     table = table.copy()
     table["rank_temp"] = table["temp_anom"].rank(method="min").astype(int)
     table["rank_air"] = table["pm25_anom"].rank(method="min").astype(int)
+    # z-score: how many standard deviations a value is from the average of these areas
     z = lambda s: (s - s.mean()) / s.std(ddof=0)
     table["score"] = (z(table["temp_anom"]) + z(table["pm25_anom"])) / 2
     table["rank_overall"] = table["score"].rank(method="min").astype(int)
@@ -103,6 +108,7 @@ def add_ranks(table):
 
 
 def main():
+    """Run all steps and write the four output files."""
     d, centers, counts = load_readings()
     print(f"{counts['raw_rows']:,} raw rows -> {counts['in_areas']:,} clean readings in areas")
 
@@ -123,10 +129,12 @@ def main():
     print(f"months: {months['enough_data'].sum()} of {len(months)} area-months have enough data")
 
     # where the bikes rode, per month
+    # move each reading to the center of its cell, then count readings per cell
     cells = d.assign(lat=(d["lat"] / CELL_LAT).round() * CELL_LAT, lon=(d["lon"] / CELL_LON).round() * CELL_LON)
     tracks = cells.groupby(["month", "lat", "lon"]).size().rename("n").reset_index()
     tracks.round(5).to_csv(DIR / "tracks.csv", index=False)
 
+    # the rules and totals, so the app can show them without reading the raw file
     info = {
         "points": int(counts["in_areas"]), "raw_rows": int(counts["raw_rows"]),
         "sensors": int(d["bike"].nunique()),
