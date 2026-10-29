@@ -1,7 +1,15 @@
 # ─── Example community content (made up, shown as demo posts) ───
-# Meetups listed in the Community tab, and spot ratings in the Rate & Report tab
-
-# joined = people signed up so far, max = place limit; "point" is where the group meets
+# Meetups listed in the Community tab, spot ratings and Ideas Board places in the Rate & Report tab
+ 
+# Where each idea on the Ideas Board would be built: street names from the road network,
+# drawn on the City Map by its "Show on Map" button ([] = city-wide, shows the whole map)
+IDEA_PLACES = {
+    1: ["Marktplatz", "Kaiserstraße", "Hauptbahnhof"],  # Cooling water walls
+    2: [],                                               # Lamp post sensors, city-wide
+    3: ["Wertwiesen", "Am Neckaruferpark"],              # Pet-friendly water stations
+    4: ["Kaiserstraße", "Dammstraße"],                   # Sapling Squad
+    5: ["Marktplatz", "Kaiserstraße"],                   # Crochet shade canopy
+}
 MEETUPS = [
     {"id": 1, "title": "Morning Jog along Neckar", "activity": "Jogging", "organizer": "Anna M.",
      "date": "2026-07-15", "time": "06:30", "point": "Neckarufer Sued", "joined": 8, "max": 15,
@@ -16,7 +24,6 @@ MEETUPS = [
      "date": "2026-07-22", "time": "17:30", "point": "Waldgebiet Jaegerhaus", "joined": 6, "max": 12,
      "desc": "Shaded forest route. ~10km, moderate."},
 ]
-
 # rating = average stars (1-5), reviews = how many people rated the spot
 RATINGS = [
     {"spot": "Waldgebiet Jaegerhaus", "rating": 4.8, "reviews": 15, "comment": "Coolest spot in the city"},

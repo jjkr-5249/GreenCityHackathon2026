@@ -1,3 +1,4 @@
+
 """Every text on the website in English and German, plus t() / opt() to pick the right one.
  
 To change a text: edit it in T below (first = English, second = German).
@@ -241,6 +242,12 @@ T = {
     "n_votes": ("👍 {n} Votes", "👍 {n} Stimmen"),
     "n_comments": ("💬 {n} Comments", "💬 {n} Kommentare"),
     "show_on_map": ("📍 Show on Map", "📍 Auf Karte zeigen"),
+    "idea_on_map": ("💡 **{title}**: where the idea would be built is drawn in cyan.",
+                    "💡 **{title}**: Wo die Idee umgesetzt würde, ist türkis eingezeichnet."),
+    "idea_city_wide": ("💡 **{title}** is planned for the whole city, so the whole map is shown.",
+                       "💡 **{title}** ist für die ganze Stadt geplant, daher wird die ganze Karte gezeigt."),
+    "idea_tooltip": ("💡 {title} — {street}", "💡 {title} — {street}"),
+    "hide_idea": ("✖ Hide idea", "✖ Idee ausblenden"),
     "image_missing": ("📷 Image: {file} not found — place it in the images folder",
                       "📷 Bild: {file} nicht gefunden — lege es in den Ordner images"),
  

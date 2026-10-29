@@ -1,21 +1,22 @@
 """⭐ Rate & Report tab: rate a spot, suggest an improvement, and the Community Ideas Board.
-
+ 
 The forms are a demo (nothing is saved yet). The ideas board shows five example ideas;
-their texts are in translation.py (keys idea1_... to idea5_...).
+their texts are in translation.py (keys idea1_... to idea5_...), their places on the map
+in community_examples.py (IDEA_PLACES).
 """
 from pathlib import Path
-
+ 
 import streamlit as st
 import plotly.express as px
 import pandas as pd
 from tabs.community_examples import RATINGS
 from tabs.real_data import AREA_NAMES
 from tabs.translation import t, opt, get_lang, RATING_COMMENTS_DE
-
+ 
 # tabs/rate_report_tab.py -> project root -> images/
 IMAGES_DIR = Path(__file__).resolve().parent.parent / "images"
-
-
+ 
+ 
 def idea_header(emoji, title, badge, badge_color, meta, background):
     """Colored title bar of an idea on the ideas board."""
     st.markdown(f"""
@@ -28,41 +29,52 @@ def idea_header(emoji, title, badge, badge_color, meta, background):
         <p style="color: #555; font-size: 0.85rem;">{meta}</p>
     </div>
     """, unsafe_allow_html=True)
-
-
+ 
+ 
+def show_idea_on_map(n):
+    """Open the City Map with idea n's places drawn (see IDEA_PLACES and map_tab.py)."""
+    st.session_state.shown_idea = n
+    st.session_state.selected_spot = None   # so the map zooms to the idea
+    st.session_state.selected_bike = None
+    st.session_state.open_tab = 1           # position of the City Map tab in app.py
+    st.session_state.tab_jump = st.session_state.get("tab_jump", 0) + 1  # tabs widget reopens at open_tab
+    st.rerun()
+ 
+ 
 def idea_buttons(n, votes, comments):
     """Vote, comment and map buttons under an idea (demo: they don't do anything yet)."""
     c1, c2, c3 = st.columns(3)
     c1.button(t("n_votes", n=votes), key=f"vote_{n}", width="stretch")
     c2.button(t("n_comments", n=comments), key=f"comment_{n}", width="stretch")
-    c3.button(t("show_on_map"), key=f"map_{n}", width="stretch")
-
-
+    if c3.button(t("show_on_map"), key=f"map_{n}", width="stretch"):
+        show_idea_on_map(n)
+ 
+ 
 # ═══ TAB: RATE & REPORT ═══
 def render():
     st.header(t("rate_header"))
-
+ 
     rate_tab, ideas_tab = st.tabs([t("subtab_rate"), t("subtab_ideas")])
-
+ 
     # ─── Sub-tab: Rate & Report ───
     with rate_tab:
         col_form, col_reviews = st.columns(2)
-
+ 
         with col_form:
             st.subheader(t("rate_spot"))
             with st.form("rate_form"):
                 spot = st.selectbox(t("select_spot"), AREA_NAMES)
                 rating = st.slider(t("rating"), 1, 5, 3, format="%d ⭐")
                 comment = st.text_area(t("your_experience"))
-
+ 
                 # always shown: inside a form, a checkbox can't show or hide other fields before submit
                 issue = st.selectbox(t("report_issue"),
                     ["No issue", "Broken fountain", "No shade", "Trash", "Unsafe", "Needs seating", "Needs water"],
                     format_func=opt)
-
+ 
                 if st.form_submit_button(t("submit"), width="stretch"):
                     st.success(t("thanks_demo"))
-
+ 
             st.subheader(t("suggest_improvement"))
             with st.form("suggest_form"):
                 suggestion = st.selectbox(t("whats_needed"),
@@ -73,7 +85,7 @@ def render():
                                            format_func=opt)
                 if st.form_submit_button(t("submit_suggestion"), width="stretch"):
                     st.success(t("recorded_demo"))
-
+ 
         with col_reviews:
             st.subheader(t("community_ratings"))
             for r in RATINGS:
@@ -85,7 +97,7 @@ def render():
                 st.markdown(f"**{r['spot']}** {stars} ({r['rating']}/5 · {r['reviews']} {t('reviews')})")
                 st.caption(f'"{rating_comment}" {label}')
                 st.divider()
-
+ 
             st.subheader(t("most_requested"))
             # example vote counts (demo data)
             needs = ["Trees", "Fountains", "Benches", "Cooling", "Pet Water", "Sensors"]
@@ -97,12 +109,12 @@ def render():
             )
             fig.update_layout(height=280, showlegend=False)
             st.plotly_chart(fig, width="stretch")
-
+ 
     # ─── Sub-tab: Community Ideas Board ───
     with ideas_tab:
         st.subheader(t("subtab_ideas"))
         st.write(t("ideas_intro"))
-
+ 
         # Post your idea form
         with st.expander(t("post_idea"), expanded=False):
             with st.form("idea_form"):
@@ -115,11 +127,11 @@ def render():
                 idea_image = st.file_uploader(t("upload_photo"), type=["png", "jpg", "jpeg"])
                 if st.form_submit_button(t("post_idea_btn"), width="stretch"):
                     st.success(t("idea_posted"))
-
+ 
         st.divider()
-
+ 
         # ─── Existing community ideas ───
-
+ 
         # IDEA 1: Cooling Wall
         idea_header("🧊", t("idea1_title"), opt("Cooling Infrastructure"), "#2196f3", t("idea1_meta"),
                     "linear-gradient(135deg, #e3f2fd, #bbdefb)")
@@ -136,9 +148,9 @@ def render():
         with col_desc1:
             st.markdown(t("idea1_body"))
             idea_buttons(1, 47, 12)
-
+ 
         st.divider()
-
+ 
         # IDEA 2: Lamp Post Sensors
         idea_header("📡", t("idea2_title"), opt("Sensor Network"), "#ff9800", t("idea2_meta"),
                     "linear-gradient(135deg, #fff3e0, #ffe0b2)")
@@ -159,9 +171,9 @@ def render():
         with col_desc2:
             st.markdown(t("idea2_body"))
             idea_buttons(2, 63, 21)
-
+ 
         st.divider()
-
+ 
         # IDEA 3: Pet-Friendly Water Stations
         idea_header("🐕", t("idea3_title"), opt("Pet Friendly"), "#4caf50", t("idea3_meta"),
                     "linear-gradient(135deg, #e8f5e9, #c8e6c9)")
@@ -183,9 +195,9 @@ def render():
         with col_desc3:
             st.markdown(t("idea3_body"))
             idea_buttons(3, 52, 18)
-
+ 
         st.divider()
-
+ 
         # IDEA 4: Kids Tree Planting Initiative
         idea_header("🌱", t("idea4_title"), opt("Kids Initiative"), "#43a047", t("idea4_meta"),
                     "linear-gradient(135deg, #e8f5e9, #a5d6a7)")
@@ -219,9 +231,9 @@ def render():
             st.markdown(t("idea4_body"))
             idea_buttons(4, 203, 67)
             st.caption(t("idea4_top_comment"))
-
+ 
         st.divider()
-
+ 
         # IDEA 5: Elderly Crochet Shade Canopy
         idea_header("🧶", t("idea5_title"), opt("Community Project"), "#f9a825", t("idea5_meta"),
                     "linear-gradient(135deg, #fff8e1, #ffecb3)")
