@@ -55,11 +55,10 @@ def render():
                 rating = st.slider(t("rating"), 1, 5, 3, format="%d ⭐")
                 comment = st.text_area(t("your_experience"))
 
-                report = st.checkbox(t("report_issue"))
-                if report:
-                    issue = st.selectbox(t("issue"),
-                        ["Broken fountain", "No shade", "Trash", "Unsafe", "Needs seating", "Needs water"],
-                        format_func=opt)
+                # always shown: inside a form, a checkbox can't show or hide other fields before submit
+                issue = st.selectbox(t("report_issue"),
+                    ["No issue", "Broken fountain", "No shade", "Trash", "Unsafe", "Needs seating", "Needs water"],
+                    format_func=opt)
 
                 if st.form_submit_button(t("submit"), width="stretch"):
                     st.success(t("thanks_demo"))

@@ -24,6 +24,15 @@ T = {
     "layer_access": ("Accessible Routes ♿", "Barrierearme Wege ♿"),
     "bumpy_missing": ("{missing} of {total} bumpy roads were not found in the road network",
                       "{missing} von {total} holprigen Straßen wurden im Straßennetz nicht gefunden"),
+    "time_period": ("Time Period", "Zeitraum"),
+    "show_data_from": ("Show data from", "Daten anzeigen von"),
+    "all_data": ("All data: {first} to {last}.", "Alle Daten: {first} bis {last}."),
+
+    # Dates and time periods (see periods.py)
+    "short_date": ("{d} {m}", "{d}. {m}"),
+    "period_all": ("All months ({first} – {last})", "Alle Monate ({first} – {last})"),
+    "period_month": ("{month} {year} ({first}–{last})", "{month} {year} ({first}.–{last})"),
+    "period_one_day": ("{month} {year} ({day})", "{month} {year} ({day})"),
 
     # Tabs
     "tab_home": ("🏠 Home", "🏠 Start"),
@@ -84,6 +93,24 @@ T = {
     "map_header": ("☀️ Heilbronn Climate Map", "☀️ Klimakarte Heilbronn"),
     "measured_by": ("Measured by {sensors} openSenseMap sensor bikes, {first} to {last}",
                     "Gemessen von {sensors} openSenseMap-Sensor-Rädern, {first} bis {last}"),
+    "map_caption": ("📅 {period} · measured by {sensors} openSenseMap sensor bikes",
+                    "📅 {period} · gemessen von {sensors} openSenseMap-Sensor-Rädern"),
+    "grey_note": (" · {n} areas without enough data this month are grey",
+                  " · {n} Gebiete ohne genug Daten in diesem Monat sind grau"),
+    "no_area_enough": ("⚠️ No area has enough data in this month, so all areas are grey.",
+                       "⚠️ Kein Gebiet hat in diesem Monat genug Daten, daher sind alle Gebiete grau."),
+    "few_sensors": ("⚠️ Only {n} bike(s) rode in this month. The comparison “vs. city at the same hour” then "
+                    "has almost no other readings to compare with, so heat scores and ranks are close to "
+                    "meaningless. Fine dust averages are still real measurements.",
+                    "⚠️ In diesem Monat sind nur {n} Rad/Räder gefahren. Der Vergleich „ggü. der Stadt zur "
+                    "selben Uhrzeit“ hat dann kaum andere Messwerte, daher sagen Hitzewerte und Ränge fast "
+                    "nichts aus. Die Feinstaub-Mittelwerte sind trotzdem echte Messungen."),
+    "not_enough_tooltip": ("📡 {area} — not enough data in {period}", "📡 {area} — zu wenig Daten · {period}"),
+    "not_enough_popup": ("<b>📡 {area}</b><br><br>Not enough data in {period}:<br>{readings} readings on "
+                         "{days} days (needs {min_readings} readings on {min_days} days).",
+                         "<b>📡 {area}</b><br><br>Zu wenig Daten · {period}:<br>{readings} Messwerte an "
+                         "{days} Tagen (nötig sind {min_readings} Messwerte an {min_days} Tagen)."),
+    "not_enough_info": ("📍 **{area}** — not enough data in {period}.", "📍 **{area}** — zu wenig Daten · {period}."),
     "avg_temp": ("Avg Temp", "Ø Temperatur"),
     "avg_pm25": ("Avg PM2.5", "Ø PM2.5"),
     "sensor_bikes": ("Sensor Bikes", "Sensor-Räder"),
@@ -541,6 +568,27 @@ Lasst uns Heilbronn kühl stricken! 🧶❤️
     "where_measured_intro": ("Purple = streets the sensor bikes rode (darker = more readings). Circles = the ranked areas.",
                              "Lila = Straßen, die die Sensor-Räder befahren haben (dunkler = mehr Messwerte). Kreise = die bewerteten Gebiete."),
     "coverage_tooltip": ("📡 {area} — {readings} readings on {days} days", "📡 {area} — {readings} Messwerte an {days} Tagen"),
+    "overall_result": ("🏁 Overall Result · {period}", "🏁 Gesamtergebnis · {period}"),
+
+    # Dashboard: month by month
+    "by_month_header": ("📅 Month by Month", "📅 Monat für Monat"),
+    "by_month_caption": ("An area counts in a month only with at least {readings} readings on {days} days; "
+                         "otherwise it shows “–”. Use the time period in the sidebar to see one month on the map.",
+                         "Ein Gebiet zählt in einem Monat nur mit mindestens {readings} Messwerten an {days} Tagen, "
+                         "sonst steht dort „–“. Wähle im Seitenmenü einen Zeitraum, um einen Monat auf der Karte zu sehen."),
+    "month": ("Month", "Monat"),
+    "chart_city_temp": ("City Temperature per Month", "Temperatur der Stadt pro Monat"),
+    "chart_city_pm": ("City Fine Dust per Month", "Feinstaub der Stadt pro Monat"),
+    "livability_per_month": ("**🏙️ Livability per month** (same colors as the map)",
+                             "**🏙️ Lebensqualität pro Monat** (gleiche Farben wie auf der Karte)"),
+    "all_months_col": ("All", "Alle"),
+    "one_area": ("**🔎 One area over the months**", "**🔎 Ein Gebiet über die Monate**"),
+    "no_month_data": ("{area} has no month with enough data.", "{area} hat keinen Monat mit genug Daten."),
+    "chart_area_temp": ("{area}: Temperature vs. City", "{area}: Temperatur ggü. Stadt"),
+    "chart_area_livability": ("{area}: Livability", "{area}: Lebensqualität"),
+    "axis_temp_vs_city": ("°C vs. city (same hour)", "°C ggü. Stadt (selbe Uhrzeit)"),
+    "axis_livability": ("Livability (0–100)", "Lebensqualität (0–100)"),
+    "last_month_note": ("The last month only has data until {day}.", "Der letzte Monat hat nur Daten bis zum {day}."),
 
     # Footer
     "footer": ("🌿 EcoCity HN — Green City Heilbronn Hackathon | Data: openSenseMap · OpenStreetMap",
@@ -553,7 +601,7 @@ OPTIONS_DE = {
     "Jogging": "Joggen", "Walking": "Spazieren", "Cycling": "Radfahren",
     "Yoga": "Yoga", "Workout": "Workout", "Other": "Sonstiges",
     # Issues
-    "Broken fountain": "Defekter Brunnen", "No shade": "Kein Schatten", "Trash": "Müll",
+    "No issue": "Kein Problem", "Broken fountain": "Defekter Brunnen", "No shade": "Kein Schatten", "Trash": "Müll",
     "Unsafe": "Unsicher", "Needs seating": "Sitzplätze fehlen", "Needs water": "Wasser fehlt",
     # Suggestions
     "More trees": "Mehr Bäume", "Water fountain": "Trinkbrunnen", "Cooling station": "Kühlstation",
@@ -590,6 +638,13 @@ RATING_COMMENTS_DE = {
     "Marktplatz": "Zu heiß, nachmittags meiden",
 }
 
+MONTH_NAMES = {
+    "en": ["January", "February", "March", "April", "May", "June",
+           "July", "August", "September", "October", "November", "December"],
+    "de": ["Januar", "Februar", "März", "April", "Mai", "Juni",
+           "Juli", "August", "September", "Oktober", "November", "Dezember"],
+}
+
 
 def translate(key, lang, **kwargs):
     """Text for key in lang ("en" or "de"), with any {placeholders} filled in from kwargs."""
@@ -613,3 +668,9 @@ def t(key, **kwargs):
 
 def opt(value):
     return translate_option(value, get_lang())
+
+
+def month_name(number, short=False):
+    """Name of month 1-12 in the page language; short = first three letters ("Jun", "Okt")."""
+    name = MONTH_NAMES[get_lang()][number - 1]
+    return name[:3] if short else name

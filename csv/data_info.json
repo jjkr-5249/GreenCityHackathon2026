@@ -1,0 +1,114 @@
+{
+ "points": 201156,
+ "raw_rows": 475614,
+ "sensors": 26,
+ "first_day": "2025-12-17",
+ "last_day": "2026-10-19",
+ "start_date": "2025-12-01",
+ "max_humidity": 85,
+ "max_pm25": 100,
+ "max_km": 2.5,
+ "min_readings": 300,
+ "min_days": 3,
+ "min_month_readings": 100,
+ "min_month_days": 3,
+ "counts": {
+  "raw_rows": 475614,
+  "with_values_from_start": 251725,
+  "after_humidity_rule": 243754,
+  "after_pm25_rule": 243584,
+  "in_areas": 201156
+ },
+ "months": [
+  "2025-12",
+  "2026-01",
+  "2026-02",
+  "2026-03",
+  "2026-04",
+  "2026-05",
+  "2026-06",
+  "2026-07",
+  "2026-08",
+  "2026-09",
+  "2026-10"
+ ],
+ "month_totals": {
+  "2025-12": {
+   "readings": 79,
+   "sensors": 1,
+   "days": 2,
+   "first_day": "2025-12-17",
+   "last_day": "2025-12-19"
+  },
+  "2026-01": {
+   "readings": 2044,
+   "sensors": 1,
+   "days": 5,
+   "first_day": "2026-01-11",
+   "last_day": "2026-01-24"
+  },
+  "2026-02": {
+   "readings": 1072,
+   "sensors": 1,
+   "days": 6,
+   "first_day": "2026-02-03",
+   "last_day": "2026-02-18"
+  },
+  "2026-03": {
+   "readings": 476,
+   "sensors": 2,
+   "days": 1,
+   "first_day": "2026-03-13",
+   "last_day": "2026-03-13"
+  },
+  "2026-04": {
+   "readings": 1401,
+   "sensors": 1,
+   "days": 7,
+   "first_day": "2026-04-16",
+   "last_day": "2026-04-30"
+  },
+  "2026-05": {
+   "readings": 2522,
+   "sensors": 1,
+   "days": 8,
+   "first_day": "2026-05-01",
+   "last_day": "2026-05-21"
+  },
+  "2026-06": {
+   "readings": 67325,
+   "sensors": 16,
+   "days": 20,
+   "first_day": "2026-06-11",
+   "last_day": "2026-06-30"
+  },
+  "2026-07": {
+   "readings": 48287,
+   "sensors": 9,
+   "days": 28,
+   "first_day": "2026-07-01",
+   "last_day": "2026-07-31"
+  },
+  "2026-08": {
+   "readings": 26806,
+   "sensors": 9,
+   "days": 22,
+   "first_day": "2026-08-04",
+   "last_day": "2026-08-31"
+  },
+  "2026-09": {
+   "readings": 42057,
+   "sensors": 8,
+   "days": 19,
+   "first_day": "2026-09-01",
+   "last_day": "2026-09-30"
+  },
+  "2026-10": {
+   "readings": 9087,
+   "sensors": 5,
+   "days": 9,
+   "first_day": "2026-10-02",
+   "last_day": "2026-10-19"
+  }
+ }
+}

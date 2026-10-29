@@ -45,13 +45,14 @@ def render():
             if get_lang() == "de" and mu["id"] in MEETUPS_DE:
                 mu_title, mu_desc = MEETUPS_DE[mu["id"]]
 
-            st.markdown(f"""
-            ### {emoji} {mu_title}
-            📅 {t('date_at_time', date=mu['date'], time=mu['time'])} | 📍 {mu['point']}
-            {mu_desc}
-            👤 **{mu['joined']}/{mu['max']}** {t('joined_count', n=spots_left)}
-            *{t('organized_by', name=mu['organizer'])}*
-            """)
+            # "  \n" is a line break in markdown (a plain newline would join the lines into one)
+            st.markdown(f"### {emoji} {mu_title}")
+            st.markdown(
+                f"📅 {t('date_at_time', date=mu['date'], time=mu['time'])} | 📍 {mu['point']}  \n"
+                f"{mu_desc}  \n"
+                f"👤 **{mu['joined']}/{mu['max']}** {t('joined_count', n=spots_left)}  \n"
+                f"*{t('organized_by', name=mu['organizer'])}*"
+            )
 
             if st.button(t("join_event"), key=f"join_{mu['id']}"):
                 st.success(t("joined") + " (Demo)")

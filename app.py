@@ -4,7 +4,8 @@ This file only builds the frame of the website: page setup, the ENG / DE switch,
 the sidebar (on the right) and the tabs. Each tab's content is in its own file in tabs/.
 """
 import streamlit as st
-from tabs.real_data import BUMPY_ROADS, BUMPY_ON_MAP
+from tabs.real_data import BUMPY_ROADS, BUMPY_ON_MAP, DATA_INFO
+from tabs.periods import PERIODS, period_label, short_date
 from tabs.translation import t
 from tabs import home_tab, map_tab, community_tab, rate_report_tab, dashboard_tab
 
@@ -56,6 +57,13 @@ with st.sidebar:
     st.caption(t("tagline"))
     st.divider()
 
+    st.subheader(t("time_period"))
+    # the key keeps the chosen period when the label changes language
+    period = st.selectbox(t("show_data_from"), PERIODS, format_func=period_label, key="period")
+    st.caption(t("all_data", first=short_date(DATA_INFO["first_day"], with_year=True),
+                 last=short_date(DATA_INFO["last_day"], with_year=True)))
+    st.divider()
+
     st.subheader(t("map_layers"))
     show_real = st.checkbox(t("layer_real"), value=True)
     real_by = "livability"
@@ -94,7 +102,7 @@ if tab_home.open:
 
 if tab_map.open:
     with tab_map:
-        map_tab.render(show_real, real_by, show_tracks, show_bike_streets, show_access, show_bumpy)
+        map_tab.render(period, show_real, real_by, show_tracks, show_bike_streets, show_access, show_bumpy)
 
 if tab_community.open:
     with tab_community:

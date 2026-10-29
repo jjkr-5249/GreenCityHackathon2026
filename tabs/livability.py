@@ -6,7 +6,7 @@ Each part is a score from 0 (bad) to 100 (good). Change WEIGHTS to give a part
 more or less say; they are scaled to add up to 1, so any numbers work.
 To add a part later (e.g. amenities): compute a "score_<part>" column and add it to WEIGHTS.
 """
-from tabs.real_data import AREAS, BIKE_STREETS, BUMPY_ROADS, AREA_RADIUS_M, distance_m
+from tabs.real_data import AREAS, MONTHS, BIKE_STREETS, BUMPY_ROADS, AREA_RADIUS_M, distance_m
 from tabs.routing import route_from_area_to_nearest_bike_street
 
 WEIGHTS = {"air": 0.4, "heat": 0.4, "bike": 0.2}
@@ -50,12 +50,25 @@ def bike_score(area):
     return clip(score)
 
 
-# ─── Add the scores to the areas table ───
-AREAS["score_air"] = AREAS.apply(air_score, axis=1)
-AREAS["score_heat"] = AREAS.apply(heat_score, axis=1)
-AREAS["score_bike"] = AREAS.apply(bike_score, axis=1)
-total_weight = sum(WEIGHTS.values())
-AREAS["livability"] = sum(AREAS[f"score_{part}"] * w for part, w in WEIGHTS.items()) / total_weight
+def add_scores(table, bike_scores=None):
+    """Add score_air, score_heat, score_bike and livability columns to a table of areas.
+
+    bike_scores: area name -> bike score, to reuse instead of computing again
+    (bike access is the same in every month).
+    """
+    table["score_air"] = table.apply(air_score, axis=1)
+    table["score_heat"] = table.apply(heat_score, axis=1)
+    if bike_scores is None:
+        table["score_bike"] = table.apply(bike_score, axis=1)
+    else:
+        table["score_bike"] = table["area"].map(bike_scores)
+    total_weight = sum(WEIGHTS.values())
+    table["livability"] = sum(table[f"score_{part}"] * w for part, w in WEIGHTS.items()) / total_weight
+
+
+# ─── Scores for all months together, and for each month ───
+add_scores(AREAS)
+add_scores(MONTHS, bike_scores=AREAS.set_index("area")["score_bike"])
 
 
 def mix(color_a, color_b, t):

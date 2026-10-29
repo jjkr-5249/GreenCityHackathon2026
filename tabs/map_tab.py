@@ -1,19 +1,27 @@
 """🗺️ City Map tab: measured areas, sensor bike tracks, bike streets, smooth routes and bumpy roads.
 
-The map layers are switched on and off in the sidebar (see app.py), which passes them to render().
+The time period and the map layers are chosen in the sidebar (see app.py), which passes them to render().
 """
+import pandas as pd
 import streamlit as st
 import folium
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 import numpy as np
-from tabs.real_data import (AREAS, TRACKS, BIKE_STREETS, BUMPY_ON_MAP, DATA_INFO, AREA_RADIUS_M,
+from tabs.real_data import (AREAS, BIKE_STREETS, BUMPY_ON_MAP, DATA_INFO, AREA_RADIUS_M,
                             MIN_RIDES, MARKTPLATZ, weighted_mean)
 from tabs.livability import livability_color, in_area
+from tabs.periods import areas_for, totals_for, tracks_for, period_label
 from tabs.routing import route_to_nearest_bike_street, route_from_area_to_nearest_bike_street
 from tabs.translation import t
 
 INDENT = "<br>&nbsp;&nbsp;&nbsp;&nbsp;"  # new, indented line in a map popup
+GREY = "#9e9e9e"                         # areas without enough data in the chosen month
+
+
+def fmt(value, pattern):
+    """Format a number, or show a dash when there is no value."""
+    return "–" if value is None or pd.isna(value) else pattern.format(value)
 
 
 def small_bike_icon(color):
@@ -25,11 +33,19 @@ def small_bike_icon(color):
     return folium.DivIcon(html=html, icon_size=(0, 0))
 
 
-def tracks_heatmap():
+def name_label(text, color, border):
+    """Name label in the middle of an area circle, e.g. border="2px solid #43a047"."""
+    html = f"""<div style="transform: translate(-50%, -50%); width: max-content;
+        background: white; color: {color}; border: {border}; border-radius: 10px;
+        padding: 1px 6px; font: bold 11px sans-serif; cursor: pointer;">{text}</div>"""
+    return folium.DivIcon(html=html, icon_size=(0, 0))
+
+
+def tracks_heatmap(tracks):
     """Where the sensor bikes rode, as a purple heatmap (also used on the Dashboard)."""
-    # log scale, so busy roads don't hide the quiet ones (n goes from 1 to ~8000)
-    weight = np.log1p(TRACKS["n"]) / np.log1p(TRACKS["n"].max())
-    return HeatMap(list(zip(TRACKS["lat"], TRACKS["lon"], weight)), radius=6, blur=4, min_opacity=0.4,
+    # log scale, so busy roads don't hide the quiet ones (n goes from 1 to several thousand)
+    weight = np.log1p(tracks["n"]) / np.log1p(tracks["n"].max())
+    return HeatMap(list(zip(tracks["lat"], tracks["lon"], weight)), radius=6, blur=4, min_opacity=0.4,
                    gradient={0.2: "#d1c4e9", 0.6: "#7e57c2", 1.0: "#311b92"})
 
 
@@ -56,7 +72,15 @@ def draw_street(m, street, color, tip, info):
                   icon=small_bike_icon(color)).add_to(m)
 
 
-def area_popup(a):
+def draw_area(m, a, tooltip, popup, label_icon, **circle_style):
+    """An area circle plus its name label in the middle; both open the same popup."""
+    folium.Circle([a["lat"], a["lon"]], radius=AREA_RADIUS_M, tooltip=tooltip,
+                  popup=folium.Popup(popup, max_width=280), **circle_style).add_to(m)
+    folium.Marker([a["lat"], a["lon"]], icon=label_icon,
+                  tooltip=tooltip, popup=folium.Popup(popup, max_width=280)).add_to(m)
+
+
+def area_popup(a, period, total):
     """Popup text of a measured area: livability, temperature, air, bike lanes and bumpy roads."""
     air = (t("air_cleaner") if a["pm25_anom"] < 0.1
            else t("air_slightly_worse") if a["pm25_anom"] < 0.4 else t("air_more_dust"))
@@ -80,13 +104,14 @@ def area_popup(a):
     if not bumps:
         bumps = INDENT + t("no_bumpy")
 
-    return f"""<b>📡 {a['area']}</b> · {t('rank_of', rank=a['rank_overall'], total=len(AREAS))}<br><br>
+    return f"""<b>📡 {a['area']}</b> · {t('rank_of', rank=int(a['rank_overall']), total=total)}<br>
+    <small>📅 {period_label(period)}</small><br><br>
     🏙️ <b>{t('livability')}:</b> {a['livability']:.0f}/100{INDENT}{t('livability_parts', air=a['score_air'], heat=a['score_heat'], bike=a['score_bike'])}<br>
     🌡️ <b>{t('temperature')}:</b> {a['temp_mean']:.1f}°C{INDENT}{t('vs_city_same_hour', anom=a['temp_anom'])}<br>
     🌬️ <b>{t('air_quality')}:</b> {air}{INDENT}PM2.5: {a['pm25_mean']:.1f} µg/m³ ({a['pm25_anom']:+.2f} {t('vs_city')}){INDENT}PM10: {a['pm10_mean']:.1f} µg/m³<br>
     🚲 <b>{t('bike_lanes')}:</b>{bikes}<br>
     🛣️ <b>{t('bumpy_roads')}:</b>{bumps}<br><br>
-    <small>{t('area_footer', readings=a['readings'], days=a['days'], riders=a['riders'])}</small>"""
+    <small>{t('area_footer', readings=f"{a['readings']:,}", days=a['days'], riders=a['riders'])}</small>"""
 
 
 def area_color(a, real_by):
@@ -101,8 +126,17 @@ def area_color(a, real_by):
     return "#43a047" if a["pm25_anom"] < 0.1 else "#fb8c00" if a["pm25_anom"] < 0.4 else "#e53935", 0.35
 
 
+def area_buttons(areas, icon, key):
+    """One button per area (selects it on the map), or a dash when there are none."""
+    if areas.empty:
+        st.caption("–")
+    for _, a in areas.iterrows():
+        if st.button(f"{icon} {a['label']} {a['temp_anom']:+.2f}°C", key=f"{key}_{a['label']}", width="stretch"):
+            st.session_state.selected_spot = a["area"]
+
+
 # ═══ TAB: CITY MAP ═══
-def render(show_real, real_by, show_tracks, show_bike_streets, show_access, show_bumpy):
+def render(period, show_real, real_by, show_tracks, show_bike_streets, show_access, show_bumpy):
     # The selected area (its full name, or None)
     if "selected_spot" not in st.session_state:
         st.session_state.selected_spot = None
@@ -111,34 +145,45 @@ def render(show_real, real_by, show_tracks, show_bike_streets, show_access, show
         st.session_state.selected_bike = None
         st.session_state.last_click = None
 
+    view = areas_for(period)              # all areas, with results for the chosen period
+    ranked = view[view["enough_data"]]    # only those with enough data
+    totals = totals_for(period)
+    n_grey = len(view) - len(ranked)
+
     st.header(t("map_header"))
-    st.caption(t("measured_by", sensors=DATA_INFO["sensors"],
-                 first=DATA_INFO["first_day"], last=DATA_INFO["last_day"]))
+    st.caption(t("map_caption", period=period_label(period), sensors=totals["sensors"])
+               + (t("grey_note", n=n_grey) if n_grey else ""))
 
     # Metrics
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric(t("avg_temp"), f"{weighted_mean('temp_mean'):.1f}°C")
-    c2.metric(t("avg_pm25"), f"{weighted_mean('pm25_mean'):.1f} µg/m³")
-    c3.metric(t("sensor_bikes"), DATA_INFO["sensors"])
-    c4.metric(t("readings"), f"{DATA_INFO['points']:,}")
+    c1.metric(t("avg_temp"), fmt(weighted_mean(ranked, "temp_mean"), "{:.1f}°C"))
+    c2.metric(t("avg_pm25"), fmt(weighted_mean(ranked, "pm25_mean"), "{:.1f} µg/m³"))
+    c3.metric(t("sensor_bikes"), totals["sensors"])
+    c4.metric(t("readings"), f"{totals['readings']:,}")
+
+    # Warn when the chosen period can't support a fair comparison
+    if ranked.empty:
+        st.warning(t("no_area_enough"))
+    elif totals["sensors"] < 3:
+        st.warning(t("few_sensors", n=totals["sensors"]))
 
     # Layout: area list on left, map on right
     col_spots, col_map = st.columns([1, 3])
 
     # Sorted by the difference from the rest of the city at the same hour
-    by_temp = AREAS.sort_values("temp_anom")
+    by_temp = ranked.sort_values("temp_anom")
 
     with col_spots:
+        # with few areas, split them between the two lists so none appears twice
+        n_warm = min(5, (len(by_temp) + 1) // 2)
+        n_cool = min(5, len(by_temp) - n_warm)
+
         st.subheader(t("warmest_areas"))
         st.caption(t("vs_city_now"))
-        for _, a in by_temp.tail(5).iloc[::-1].iterrows():
-            if st.button(f"🔴 {a['label']} {a['temp_anom']:+.2f}°C", key=f"hot_{a['label']}", width="stretch"):
-                st.session_state.selected_spot = a["area"]
+        area_buttons(by_temp.tail(n_warm).iloc[::-1], "🔴", "hot")
 
         st.subheader(t("coolest_areas"))
-        for _, a in by_temp.head(5).iterrows():
-            if st.button(f"🔵 {a['label']} {a['temp_anom']:+.2f}°C", key=f"cool_{a['label']}", width="stretch"):
-                st.session_state.selected_spot = a["area"]
+        area_buttons(by_temp.head(n_cool), "🔵", "cool")
 
         if show_access:
             st.subheader(t("access_header"))
@@ -158,7 +203,7 @@ def render(show_real, real_by, show_tracks, show_bike_streets, show_access, show
     with col_map:
         # Determine map center and zoom
         selected = st.session_state.selected_spot
-        selected_row = AREAS[AREAS["area"] == selected].iloc[0] if selected else None
+        selected_row = view[view["area"] == selected].iloc[0] if selected else None
         if selected:
             m = folium.Map(location=[selected_row["lat"], selected_row["lon"]], zoom_start=15, tiles="OpenStreetMap")
         else:
@@ -185,31 +230,30 @@ def render(show_real, real_by, show_tracks, show_bike_streets, show_access, show
             fit_to(m, points)
 
         if show_tracks:
-            tracks_heatmap().add_to(m)
+            tracks = tracks_for(period)
+            if not tracks.empty:
+                tracks_heatmap(tracks).add_to(m)
 
         # Real measured areas (openSenseMap bike sensors)
         if show_real:
-            for _, a in AREAS.iterrows():
+            for _, a in view.iterrows():
+                if not a["enough_data"]:
+                    # grey dashed circle: too little data in this month to say anything
+                    note = t("not_enough_popup", area=a["area"], period=period_label(period),
+                             readings=a["readings"], days=a["days"],
+                             min_readings=DATA_INFO["min_month_readings"], min_days=DATA_INFO["min_month_days"])
+                    draw_area(m, a, t("not_enough_tooltip", area=a["area"], period=period_label(period)), note,
+                              name_label(a["label"], GREY, f"1px dashed {GREY}"),
+                              color=GREY, weight=1, dash_array="4, 4", fill=True, fill_color="#bdbdbd",
+                              fill_opacity=0.25)
+                    continue
+
                 color, fill_opacity = area_color(a, real_by)
                 # a white circle needs a grey edge to be visible on the map
                 edge = "#757575" if color == "#ffffff" else color
-                popup = area_popup(a)
-                tooltip = t("area_tooltip", area=a["area"])
-                folium.Circle(
-                    [a["lat"], a["lon"]], radius=AREA_RADIUS_M,
-                    color=edge, weight=2, fill=True, fill_color=color, fill_opacity=fill_opacity,
-                    tooltip=tooltip, popup=folium.Popup(popup, max_width=280)
-                ).add_to(m)
-
-                # Clickable name label in the middle of the circle
-                label = f"""<div style="transform: translate(-50%, -50%); width: max-content;
-                    background: white; color: #111; border: 2px solid {edge}; border-radius: 10px;
-                    padding: 1px 6px; font: bold 11px sans-serif; cursor: pointer;">{a['label']}</div>"""
-                folium.Marker(
-                    [a["lat"], a["lon"]],
-                    icon=folium.DivIcon(html=label, icon_size=(0, 0)),
-                    tooltip=tooltip, popup=folium.Popup(popup, max_width=280)
-                ).add_to(m)
+                draw_area(m, a, t("area_tooltip", area=a["area"]), area_popup(a, period, len(ranked)),
+                          name_label(a["label"], "#111", f"2px solid {edge}"),
+                          color=edge, weight=2, fill=True, fill_color=color, fill_opacity=fill_opacity)
 
         # Accessible routes: wide blue band along the checked parts of the bike streets
         # (dark blue = own bike lane, light blue = shared with cars), under the violet street lines
@@ -289,5 +333,8 @@ def render(show_real, real_by, show_tracks, show_bike_streets, show_access, show
         # Show the selected area's values
         if selected:
             a = selected_row
-            st.info(t("area_info", area=a["area"], rank=a["rank_overall"], total=len(AREAS),
-                      temp=a["temp_mean"], anom=a["temp_anom"], pm25=a["pm25_mean"], pm10=a["pm10_mean"]))
+            if not a["enough_data"]:
+                st.info(t("not_enough_info", area=a["area"], period=period_label(period)))
+            else:
+                st.info(t("area_info", area=a["area"], rank=int(a["rank_overall"]), total=len(ranked),
+                          temp=a["temp_mean"], anom=a["temp_anom"], pm25=a["pm25_mean"], pm10=a["pm10_mean"]))

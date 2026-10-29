@@ -1,12 +1,19 @@
-"""All real data the app shows: measured areas, sensor bike tracks, bike streets and bumpy roads.
+"""All real data the app shows: measured areas (overall and per month), sensor bike tracks,
+bike streets and bumpy roads.
 
-The CSV files are read once from the csv/ folder in the project root. Everything below is
-plain data (DataFrames, lists of dicts) that the tabs import, so no tab reads a file itself.
+The files in the csv/ folder are read once. The measurement files are made from the raw
+openSenseMap readings by prepare_data.py ("make data"), see that file for the rules.
+Everything below is plain data (DataFrames, lists of dicts) that the tabs import,
+so no tab reads a file itself.
 """
 import ast
+import json
 from math import asin, cos, radians, sin, sqrt
 from pathlib import Path
+
 import pandas as pd
+
+from prepare_data import CELL_LAT, CELL_LON
 
 # tabs/real_data.py -> project root -> csv/
 DATA_DIR = Path(__file__).resolve().parent.parent / "csv"
@@ -18,72 +25,49 @@ def distance_m(lat1, lon1, lat2, lon2):
     a = sin((lat2 - lat1) / 2) ** 2 + cos(lat1) * cos(lat2) * sin((lon2 - lon1) / 2) ** 2
     return 2 * 6371000 * asin(sqrt(a))
 
-# ─── Real measurements: openSenseMap bike sensors, Dec 2025 - Oct 2026 ───
-# One row per area. Columns:
-#   rank_overall   1 = coolest and cleanest area, 18 = hottest and dirtiest
+
+def line_length_m(line):
+    """Length in meters of a piece given as [lat, lon] points."""
+    return sum(distance_m(*p, *q) for p, q in zip(line, line[1:]))
+
+
+# ─── Real measurements: openSenseMap bike sensors ───
+# AREAS: one row per area, all months together. Columns:
+#   rank_overall   1 = coolest and cleanest area
+#   rank_temp, rank_air   1 = coolest / cleanest
 #   temp_anom      °C above (+) or below (-) the median of all sensors at the same hour
 #   pm25_anom      PM2.5 µg/m³ above the median of all sensors at the same hour
 #   temp_mean, pm25_mean, pm10_mean   plain averages
-#   readings, days, riders            how much data each area has
-#   lat, lon       map position: the median of the area's GPS points
-#   label          short name for the map
+#   readings, days, riders            how much data each area has; first, last = first and last day
+#   lat, lon       fixed area center (area_centers.csv);  label = short name for the map
 AREAS = pd.read_csv(DATA_DIR / "heilbronn_area_ranking.csv")
+
+# MONTHS: the same columns, one row per area and month ("2026-06", ...), plus
+#   enough_data    True if the area has enough readings and days that month
+#   ranks are only among the areas with enough data that month
+MONTHS = pd.read_csv(DATA_DIR / "area_months.csv")
+
+# Rules and totals of the data preparation (points, sensors, first_day, last_day, months, month_totals, ...)
+DATA_INFO = json.loads((DATA_DIR / "data_info.json").read_text())
 
 AREA_RADIUS_M = 450  # radius of the measured-area circles on the map (meters)
 AREA_NAMES = AREAS["area"].tolist()  # used as locations in the forms
 MARKTPLATZ = [49.1422, 9.2190]       # map center when nothing is selected
 
 
-def weighted_mean(column):
-    """Average over all areas, weighted by how many readings each area has."""
-    return (AREAS[column] * AREAS["readings"]).sum() / AREAS["readings"].sum()
+def weighted_mean(table, column):
+    """Average over the areas in table, weighted by how many readings each has (None if empty)."""
+    if table.empty:
+        return None
+    return (table[column] * table["readings"]).sum() / table["readings"].sum()
 
-# Where the sensor bikes rode: GPS points grouped into cells of about 55 m
+
+# Where the sensor bikes rode, per month: GPS points grouped into cells of about 55 m
+#   month      like "2026-06"
 #   lat, lon   center of the cell
 #   n          number of readings in the cell
 TRACKS = pd.read_csv(DATA_DIR / "tracks.csv")
-
-# Streets with the most bike infrastructure
-#   segments   number of street sections with this bike infrastructure
-#   type       "lane" = own painted bike lane, "shared_lane" = bikes share the lane with cars
-BIKE_STREETS = [
-    {"name": "Neckargartacher Straße", "area": "Central / West Corridor",
-     "lat": 49.1464, "lon": 9.1955, "segments": 60, "type": "shared_lane"},
-    {"name": "Karlstraße", "area": "East-West City Center Axis",
-     "lat": 49.1426, "lon": 9.2304, "segments": 38, "type": "lane"},
-    {"name": "Würzburger Straße", "area": "Northwest Sector / Frankenbach",
-     "lat": 49.1628, "lon": 9.1769, "segments": 26, "type": "lane"},
-    {"name": "Donnbronner Straße", "area": "Southeast Corner / Flein towards Donnbronn",
-     "lat": 49.1174, "lon": 9.2692, "segments": 26, "type": "shared_lane"},
-    {"name": "Bismarckstraße & Jägerhausstraße", "area": "East Inner City Corridor",
-     "lat": 49.1401, "lon": 9.2373, "segments": 26, "type": "lane"},
-    {"name": "Gottlieb-Daimler-Straße", "area": "North Industrial Area",
-     "lat": 49.1545, "lon": 9.2136, "segments": 25, "type": "lane"},
-    {"name": "Salzstraße", "area": "North Industrial / Port Corridor",
-     "lat": 49.1638, "lon": 9.2159, "segments": 24, "type": "lane"},
-    {"name": "Schlossstraße", "area": "Far West Sector / Kirchhausen",
-     "lat": 49.1825, "lon": 9.1122, "segments": 22, "type": "shared_lane"},
-    {"name": "Charlottenstraße", "area": "South City Core",
-     "lat": 49.1220, "lon": 9.2167, "segments": 14, "type": "lane"},
-]
-
-# Bumpy roads: how rough the ride is (higher score = bumpier)
-#   avg_rough    average roughness score of the street
-#   peak_rough   worst roughness score measured on the street
-#   segments     number of street sections with roughness data
-BUMPY_ROADS = [
-    {"name": "Rolandstraße", "avg_rough": 79.79, "peak_rough": 100.0, "segments": 4},
-    {"name": "Hirschstraße", "avg_rough": 48.69, "peak_rough": 100.0, "segments": 18},
-    {"name": "Zückwolfstraße", "avg_rough": 46.67, "peak_rough": 100.0, "segments": 6},
-    {"name": "Gustav-Binder-Straße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 2},
-    {"name": "Virchowstraße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 1},
-    {"name": "Tränkgasse", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 4},
-    {"name": "Steubenstraße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 3},
-    {"name": "Kurze Straße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 2},
-    {"name": "Theodor-Heuss-Straße", "avg_rough": 38.47, "peak_rough": 40.0, "segments": 12},
-    {"name": "Im Kohlpfad", "avg_rough": 37.67, "peak_rough": 40.0, "segments": 4},
-    {"name": "Dittmarstraße", "avg_rough": 37.03, "peak_rough": 40.0, "segments": 26},
-]
+TRACKS_ALL = TRACKS.groupby(["lat", "lon"], as_index=False)["n"].sum()  # all months added up
 
 # Heilbronn's road network from OpenStreetMap: one row per piece of street
 #   name           street name
@@ -116,63 +100,93 @@ def parse_linestring(wkt):
     return points
 
 
-def street_lines(names):
-    """All pieces of the streets with these names, each piece a list of [lat, lon] points."""
-    on_street = NETWORK["names"].map(lambda piece_names: any(n in names for n in piece_names))
-    pieces = NETWORK[on_street]["geometry_wkt"]
-    return [parse_linestring(wkt) for wkt in pieces]
+def street_pieces(names):
+    """The rows of NETWORK that belong to any of these street names."""
+    return NETWORK[NETWORK["names"].map(lambda piece_names: any(n in names for n in piece_names))]
 
 
-# Give each bike street its real course from the network
-#   lines    list of pieces, each piece is a list of [lat, lon] points
-#   points   all points of the street together
-# "Bismarckstraße & Jägerhausstraße" means both streets
-for street in BIKE_STREETS:
-    street["lines"] = street_lines(street["name"].split(" & "))
+def add_course(street, pieces):
+    """Give a street its real course from the network:
+        lines      list of pieces, each piece is a list of [lat, lon] points
+        points     all points of the street together
+        lat, lon   middle of the street (where its bike sign goes), None if not in the network
+    """
+    street["lines"] = [parse_linestring(wkt) for wkt in pieces["geometry_wkt"]]
     street["points"] = [p for line in street["lines"] for p in line]
-
-# Same for each bumpy road, plus
-#   lat, lon   middle of the street (where its bike sign goes), None if not in the network
-for road in BUMPY_ROADS:
-    road["lines"] = street_lines([road["name"]])
-    road["points"] = [p for line in road["lines"] for p in line]
-    if road["points"]:
-        road["lat"] = sum(p[0] for p in road["points"]) / len(road["points"])
-        road["lon"] = sum(p[1] for p in road["points"]) / len(road["points"])
+    if street["points"]:
+        street["lat"] = sum(p[0] for p in street["points"]) / len(street["points"])
+        street["lon"] = sum(p[1] for p in street["points"]) / len(street["points"])
     else:
-        road["lat"], road["lon"] = None, None
+        street["lat"], street["lon"] = None, None
+
+
+# Streets with the most bike infrastructure. Taken from the network:
+#   type       the street's bike infrastructure: "lane" = own painted bike lane,
+#              "shared_lane" = bikes share the lane with cars
+#   segments   number of street pieces with that bike infrastructure
+# "Bismarckstraße & Jägerhausstraße" means both streets
+BIKE_STREETS = [
+    {"name": "Neckargartacher Straße", "area": "Central / West Corridor"},
+    {"name": "Karlstraße", "area": "East-West City Center Axis"},
+    {"name": "Würzburger Straße", "area": "Northwest Sector / Frankenbach"},
+    {"name": "Donnbronner Straße", "area": "Southeast Corner / Flein towards Donnbronn"},
+    {"name": "Bismarckstraße & Jägerhausstraße", "area": "East Inner City Corridor"},
+    {"name": "Gottlieb-Daimler-Straße", "area": "North Industrial Area"},
+    {"name": "Salzstraße", "area": "North Industrial / Port Corridor"},
+    {"name": "Schlossstraße", "area": "Far West Sector / Kirchhausen"},
+    {"name": "Charlottenstraße", "area": "South City Core"},
+]
+for street in BIKE_STREETS:
+    pieces = street_pieces(street["name"].split(" & "))
+    add_course(street, pieces)
+    counts = pieces["cycleway"].value_counts()  # most common bike infrastructure first, e.g. lane: 38
+    street["type"], street["segments"] = counts.index[0], int(counts.iloc[0])
+
+# Bumpy roads: how rough the ride is (higher score = bumpier)
+#   avg_rough    average roughness score of the street
+#   peak_rough   worst roughness score measured on the street
+#   segments     number of street sections with roughness data
+BUMPY_ROADS = [
+    {"name": "Rolandstraße", "avg_rough": 79.79, "peak_rough": 100.0, "segments": 4},
+    {"name": "Hirschstraße", "avg_rough": 48.69, "peak_rough": 100.0, "segments": 18},
+    {"name": "Zückwolfstraße", "avg_rough": 46.67, "peak_rough": 100.0, "segments": 6},
+    {"name": "Gustav-Binder-Straße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 2},
+    {"name": "Virchowstraße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 1},
+    {"name": "Tränkgasse", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 4},
+    {"name": "Steubenstraße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 3},
+    {"name": "Kurze Straße", "avg_rough": 40.00, "peak_rough": 40.0, "segments": 2},
+    {"name": "Theodor-Heuss-Straße", "avg_rough": 38.47, "peak_rough": 40.0, "segments": 12},
+    {"name": "Im Kohlpfad", "avg_rough": 37.67, "peak_rough": 40.0, "segments": 4},
+    {"name": "Dittmarstraße", "avg_rough": 37.03, "peak_rough": 40.0, "segments": 26},
+]
+for road in BUMPY_ROADS:
+    add_course(road, street_pieces([road["name"]]))
 
 # Only bumpy roads found in the road network can go on the map
-BUMPY_ON_MAP = [r for r in BUMPY_ROADS if r["lat"] is not None and r["lon"] is not None]
+BUMPY_ON_MAP = [r for r in BUMPY_ROADS if r["lat"] is not None]
 
 # ─── Accessible routes: the bike streets, checked with the sensor bikes ───
 # A piece of a bike street counts as accessible when:
 #   - the sensor bikes rode along most of it, so it has a rideable surface
 #   - it is not part of a bumpy road
-LAT_STEP, LON_STEP = 0.0005, 0.00075  # cell size in tracks.csv (about 55 m)
-MIN_RIDES = 20          # cells with fewer readings may be GPS noise
+MIN_RIDES = 20          # cells with fewer readings (all months together) may be GPS noise
 MIN_RIDDEN_SHARE = 0.5  # at least this part of a piece must lie on ridden cells
 SAMPLE_M = 20           # a piece is checked every 20 m
 
 
 def cell_of(lat, lon):
     """Grid position (row, col) of the tracks.csv cell that contains the point."""
-    return (round(lat / LAT_STEP), round(lon / LON_STEP))
+    return (round(lat / CELL_LAT), round(lon / CELL_LON))
 
 
 # Cells the sensor bikes rode through often
-RIDDEN = {cell_of(lat, lon) for lat, lon, n in TRACKS[["lat", "lon", "n"]].itertuples(index=False)
+RIDDEN = {cell_of(lat, lon) for lat, lon, n in TRACKS_ALL[["lat", "lon", "n"]].itertuples(index=False)
           if n >= MIN_RIDES}
 
 
 def is_ridden(lat, lon):
     """True if the point lies in a cell the bikes rode often."""
     return cell_of(lat, lon) in RIDDEN
-
-
-def line_length_m(line):
-    """Length in meters of a piece given as [lat, lon] points."""
-    return sum(distance_m(*p, *q) for p, q in zip(line, line[1:]))
 
 
 def ridden_share(line):
@@ -198,15 +212,3 @@ for street in BIKE_STREETS:
                               if line not in BUMPY_LINES and ridden_share(line) >= MIN_RIDDEN_SHARE]
     street["length_km"] = sum(line_length_m(line) for line in street["lines"]) / 1000
     street["access_km"] = sum(line_length_m(line) for line in street["access_lines"]) / 1000
-
-# How the ranking was made
-DATA_INFO = {
-    "points": 416880,
-    "sensors": 26,
-    "first_day": "2025-12-14",
-    "last_day": "2026-10-19",
-    "max_km": 2.5,        # readings further than this from an area were not used
-    "min_readings": 300,  # areas with fewer readings were left out
-    "min_days": 3,        # areas measured on fewer days were left out
-    "max_humidity": 85,   # readings above this humidity were left out
-}

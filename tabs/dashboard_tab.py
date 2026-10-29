@@ -1,25 +1,110 @@
-"""📊 Dashboard tab: the area ranking, where Heilbronn needs help, and where the sensor bikes measured.
+"""📊 Dashboard tab: the area ranking, where Heilbronn needs help, month by month,
+and where the sensor bikes measured.
 
 This is the planners' view: it turns the measured data into the places that most need
 shade, trees, cleaner air or road repairs.
 """
+import pandas as pd
 import streamlit as st
 import folium
 from streamlit_folium import st_folium
 import plotly.express as px
-from tabs.real_data import AREAS, BUMPY_ROADS, DATA_INFO, AREA_RADIUS_M, MARKTPLATZ
-from tabs.livability import WEIGHTS
+from tabs.real_data import AREAS, MONTHS, BUMPY_ROADS, DATA_INFO, AREA_RADIUS_M, MARKTPLATZ, weighted_mean
+from tabs.livability import WEIGHTS, livability_color
+from tabs.periods import ALL_MONTHS, period_label, short_date, month_short, tracks_for
 from tabs.map_tab import tracks_heatmap
 from tabs.translation import t
+
+
+def grid_color(value):
+    """Cell style of the livability-per-month table: the map's color, grey for "–"."""
+    if pd.isna(value):
+        return "background-color: #eeeeee; color: #9e9e9e"
+    text = "white" if round(value) >= 85 or round(value) <= 46 else "#111"  # readable on dark shades
+    return f"background-color: {livability_color(value)}; color: {text}"
+
+
+def render_months():
+    """City averages per month, livability of every area in every month, and one area over the months."""
+    st.subheader(t("by_month_header"))
+    st.caption(t("by_month_caption", readings=DATA_INFO["min_month_readings"], days=DATA_INFO["min_month_days"]))
+    months = DATA_INFO["months"]
+    names = {m: month_short(m) for m in months}
+    ok_months = MONTHS[MONTHS["enough_data"]]
+
+    # City averages per month
+    city = pd.DataFrame([{
+        "month": names[m],
+        "temp_mean": weighted_mean(ok_months[ok_months["month"] == m], "temp_mean"),
+        "pm25_mean": weighted_mean(ok_months[ok_months["month"] == m], "pm25_mean"),
+    } for m in months])
+    labels = {"month": t("month"), "temp_mean": t("col_temp_avg"), "pm25_mean": t("col_pm_avg")}
+    col_t, col_p = st.columns(2)
+    with col_t:
+        fig = px.line(city, x="month", y="temp_mean", markers=True, title=t("chart_city_temp"), labels=labels)
+        fig.update_layout(height=280)
+        st.plotly_chart(fig, width="stretch")
+    with col_p:
+        fig = px.line(city, x="month", y="pm25_mean", markers=True, title=t("chart_city_pm"), labels=labels)
+        fig.update_traces(line_color="#fb8c00")
+        fig.update_layout(height=280)
+        st.plotly_chart(fig, width="stretch")
+
+    # Livability of every area in every month, colored like the map
+    grid = (ok_months.pivot(index="area", columns="month", values="livability")
+            .reindex(columns=months)  # months without any data stay as "–" columns
+            .rename(columns=names))
+    grid.insert(0, t("all_months_col"), AREAS.set_index("area")["livability"])
+    grid = grid.reindex(AREAS.sort_values("livability", ascending=False)["area"])
+    st.markdown(t("livability_per_month"))
+    st.dataframe(grid.style.map(grid_color).format("{:.0f}", na_rep="–"), width="stretch",
+                 height=35 * (len(grid) + 1) + 3)
+
+    # One area over the months
+    st.markdown(t("one_area"))
+    pick = st.selectbox(t("area"), AREAS.sort_values("label")["area"], key="month_area")
+    one = ok_months[ok_months["area"] == pick].sort_values("month")
+    if one.empty:
+        st.info(t("no_month_data", area=pick))
+    else:
+        one = one.assign(month=one["month"].map(names))
+        col_a, col_b = st.columns(2)
+        with col_a:
+            fig = px.bar(one, x="month", y="temp_anom", title=t("chart_area_temp", area=pick),
+                         labels={"month": t("month"), "temp_anom": t("axis_temp_vs_city")},
+                         color="temp_anom", color_continuous_scale="RdBu_r", color_continuous_midpoint=0)
+            fig.update_layout(height=280, coloraxis_showscale=False)
+            st.plotly_chart(fig, width="stretch")
+        with col_b:
+            fig = px.bar(one, x="month", y="livability", title=t("chart_area_livability", area=pick),
+                         labels={"month": t("month"), "livability": t("axis_livability")}, range_y=[0, 100])
+            fig.update_traces(marker_color=[livability_color(v) for v in one["livability"]],
+                              marker_line_color="#757575", marker_line_width=1)
+            fig.update_layout(height=280)
+            st.plotly_chart(fig, width="stretch")
+        st.dataframe(one[["month", "livability", "temp_mean", "temp_anom", "pm25_mean", "pm25_anom", "readings", "days"]],
+                     column_config={
+                         "month": t("month"),
+                         "livability": st.column_config.NumberColumn(t("livability"), format="%.0f"),
+                         "temp_mean": st.column_config.NumberColumn(t("col_temp_avg"), format="%.1f"),
+                         "temp_anom": st.column_config.NumberColumn(t("col_temp_diff"), format="%+.2f"),
+                         "pm25_mean": st.column_config.NumberColumn(t("col_pm_avg"), format="%.1f"),
+                         "pm25_anom": st.column_config.NumberColumn(t("col_pm_diff"), format="%+.2f"),
+                         "readings": t("readings"), "days": t("col_days")},
+                     hide_index=True, width="stretch")
+    last = DATA_INFO["month_totals"][months[-1]]
+    st.caption(t("last_month_note", day=short_date(last["last_day"])))
 
 
 # ═══ TAB: DASHBOARD ═══
 def render():
     st.header(t("dashboard_header"))
     st.caption(t("dashboard_caption", sensors=DATA_INFO["sensors"], points=f"{DATA_INFO['points']:,}",
-                 first=DATA_INFO["first_day"], last=DATA_INFO["last_day"]))
+                 first=short_date(DATA_INFO["first_day"], with_year=True),
+                 last=short_date(DATA_INFO["last_day"], with_year=True)))
 
     # Key numbers
+    st.subheader(t("overall_result", period=period_label(ALL_MONTHS)))
     coolest = AREAS[AREAS["rank_temp"] == 1].iloc[0]
     dirtiest = AREAS[AREAS["rank_air"] == len(AREAS)].iloc[0]
     c1, c2, c3, c4 = st.columns(4)
@@ -98,12 +183,16 @@ def render():
 
     st.divider()
 
+    render_months()
+
+    st.divider()
+
     # Where the bikes measured: purple tracks heatmap + one circle per ranked area
     st.subheader(t("where_measured"))
     st.write(t("where_measured_intro"))
 
     cov_map = folium.Map(location=MARKTPLATZ, zoom_start=12, tiles="OpenStreetMap")
-    tracks_heatmap().add_to(cov_map)
+    tracks_heatmap(tracks_for(ALL_MONTHS)).add_to(cov_map)
     for _, a in AREAS.iterrows():
         folium.Circle(
             [a["lat"], a["lon"]], radius=AREA_RADIUS_M,

@@ -4,7 +4,7 @@ All numbers come from the real measurements in real_data.py, so they update with
 """
 import streamlit as st
 from tabs.real_data import AREAS, DATA_INFO
-import tabs.livability  # noqa: F401  (adds the livability score columns to AREAS)
+from tabs.periods import short_date  # also adds the livability score columns to AREAS
 from tabs.translation import t
 
 
@@ -38,7 +38,8 @@ def render():
     c2.metric(t("readings"), f"{DATA_INFO['points']:,}")
     c3.metric(t("areas_ranked"), len(AREAS))
     st.caption(t("measured_by", sensors=DATA_INFO["sensors"],
-                 first=DATA_INFO["first_day"], last=DATA_INFO["last_day"]))
+                 first=short_date(DATA_INFO["first_day"], with_year=True),
+                 last=short_date(DATA_INFO["last_day"], with_year=True)))
 
     st.divider()
 

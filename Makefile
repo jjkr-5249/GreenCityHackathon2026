@@ -5,7 +5,7 @@ REQS    = requirements.txt
 APP     = app.py
 
 # make / make install: create .venv and install the packages
-# make run: start the website
+# make run: start the website   make data: rebuild the csv/ tables from csv/osem_bike_data.csv
 # make clean: remove cache files   make fclean: also remove .venv   make re: fresh install
 
 all: install
@@ -20,6 +20,9 @@ install: $(BIN)/activate $(REQS)
 run: install
 	$(BIN)/streamlit run $(APP)
 
+data: install
+	$(BIN)/python prepare_data.py
+
 clean:
 	find . -path ./$(VENV) -prune -o -name __pycache__ -type d -exec rm -rf {} +
 	rm -rf .streamlit/cache
@@ -29,4 +32,4 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all install run clean fclean re
+.PHONY: all install run data clean fclean re
