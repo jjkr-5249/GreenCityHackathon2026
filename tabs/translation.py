@@ -44,14 +44,15 @@ T = {
  
     # Home tab
     "home_title": ("🌿 Stay cool and safe in Heilbronn", "🌿 Kühl und sicher durch Heilbronn"),
-    "home_mission": ("Summers in Heilbronn are getting hotter. EcoCity HN helps you find cooler, cleaner and "
-                     "smoother ways through the city, using real measurements from sensor bikes. Every rating, "
-                     "report and idea you share shows the city where Heilbronn needs more trees, shade, "
-                     "water points or cooling stations.",
-                     "Die Sommer in Heilbronn werden heißer. EcoCity HN hilft dir, kühlere, sauberere und "
-                     "glattere Wege durch die Stadt zu finden – mit echten Messungen von Sensor-Rädern. Jede "
-                     "Bewertung, Meldung und Idee, die du teilst, zeigt der Stadt, wo Heilbronn mehr Bäume, "
-                     "Schatten, Wasserstellen oder Kühlstationen braucht."),
+    "home_mission": ("EcoCity HN uses real sensor data to show how liveable each part of Heilbronn is. Bikes "
+                     "fitted with senseBox sensors measure heat and fine dust as they ride through the city. "
+                     "These measurements, together with the city's bike lanes, are combined into a livability "
+                     "score for every neighbourhood. The city of Heilbronn can see at a glance where to act first.",
+                     "EcoCity HN nutzt echte Sensordaten, um zu zeigen, wie lebenswert die einzelnen Teile "
+                     "Heilbronns sind. Mit senseBox-Sensoren ausgestattete Fahrräder messen während ihrer Fahrt "
+                     "durch die Stadt Hitze und Feinstaub. Diese Messungen werden zusammen mit den Radwegen der "
+                     "Stadt zu einem Lebensqualitätsscore für jedes Viertel kombiniert. So sieht die Stadt "
+                     "Heilbronn auf einen Blick, wo sie zuerst handeln sollte."),
     "home_motto": ("Help residents today — help the city invest smarter tomorrow.",
                    "Den Menschen heute helfen – damit die Stadt morgen klüger investiert."),
     "home_highlights": ("✨ Highlights from the measurements", "✨ Highlights aus den Messungen"),
