@@ -49,18 +49,22 @@ T = {
     "home_cleanest": ("Cleanest air: {area}", "Sauberste Luft: {area}"),
     "home_most_livable": ("Most livable: {area}", "Höchste Lebensqualität: {area}"),
     "home_what_you_can_do": ("🧭 What you can do here", "🧭 Was du hier tun kannst"),
-    "home_map_text": ("See which areas are warmer or cooler, where the air is cleaner, and find smooth "
-                      "routes between bike lane streets.",
-                      "Sieh, welche Gebiete wärmer oder kühler sind, wo die Luft sauberer ist, und finde "
-                      "glatte Wege zwischen Straßen mit Radweg."),
-    "home_community_text": ("Join or create meetups to jog, walk, cycle or do yoga together at cooler times.",
-                            "Tritt Treffen bei oder erstelle eigene, um zu kühleren Zeiten gemeinsam zu joggen, "
-                            "spazieren, Rad zu fahren oder Yoga zu machen."),
-    "home_rate_text": ("Rate spots, report problems like missing shade or water, and vote on ideas for the city.",
-                       "Bewerte Orte, melde Probleme wie fehlenden Schatten oder fehlendes Wasser, und stimme "
-                       "über Ideen für die Stadt ab."),
-    "home_dashboard_text": ("See the ranking of all measured areas and where Heilbronn needs help most.",
-                            "Sieh die Rangliste aller gemessenen Gebiete und wo Heilbronn am meisten Hilfe braucht."),
+    "home_map_text": ("Find the cooler, cleaner-air areas of Heilbronn.<br>"
+                      "Plan smooth bike routes that avoid bumpy roads.",
+                      "Finde die kühleren Gebiete mit sauberer Luft in Heilbronn.<br>"
+                      "Plane glatte Radwege ohne holprige Straßen."),
+    "home_community_text": ("Meet neighbours to jog, walk, cycle or do yoga.<br>"
+                            "Go together at cooler times of the day.",
+                            "Triff Nachbarn zum Joggen, Gehen, Radfahren oder Yoga.<br>"
+                            "Gemeinsam zu kühleren Tageszeiten."),
+    "home_rate_text": ("Rate places and report missing shade or water.<br>"
+                       "Share ideas for the city and vote for the best ones.",
+                       "Bewerte Orte und melde fehlenden Schatten oder fehlendes Wasser.<br>"
+                       "Teile Ideen für die Stadt und stimme für die besten."),
+    "home_dashboard_text": ("See which areas are hottest and dustiest.<br>"
+                            "Shows planners where trees, shade and repairs help most.",
+                            "Sieh, welche Gebiete am heißesten und staubigsten sind.<br>"
+                            "Zeigt der Stadtplanung, wo Bäume, Schatten und Reparaturen am meisten helfen."),
     "home_how_header": ("🔄 How your input helps the city", "🔄 Wie deine Beiträge der Stadt helfen"),
     "home_step1_title": ("You move and share", "Du bist unterwegs und teilst"),
     "home_step1_text": ("Sensor bikes measure heat and fine dust as they ride. You add ratings, reports and ideas.",

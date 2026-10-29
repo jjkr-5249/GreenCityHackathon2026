@@ -1,0 +1,9 @@
+# Streamlit settings for EcoCity HN (read automatically when the app is started from the project root)
+
+# Autumn colors for every page
+[theme]
+base = "light"                       # always light, also when the computer is in dark mode
+backgroundColor = "#FFF4E6"          # page background: warm cream
+secondaryBackgroundColor = "#F5D9B8" # sidebar, input boxes and forms: light pumpkin
+primaryColor = "#C2410C"             # buttons, toggles, selected tab, sliders: burnt orange
+textColor = "#3E2723"                # text: dark chestnut brown

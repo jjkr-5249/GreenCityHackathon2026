@@ -35,6 +35,16 @@ st.markdown("""
 /* open button in the top right corner; Deploy and the menu move left to make room */
 [data-testid="stExpandSidebarButton"] { position: absolute; top: 1rem; right: 0.75rem; }
 [data-testid="stToolbar"] { padding-right: 2.75rem; }
+
+/* Autumn background: cream at the top fading into soft apricot (base colors are in .streamlit/config.toml) */
+[data-testid="stApp"], [data-testid="stAppViewContainer"],
+[data-testid="stMain"], [data-testid="stMainBlockContainer"] {
+    background: linear-gradient(180deg, #FFF4E6 0%, #FCE3C4 55%, #F8CFA0 100%);
+}
+[data-testid="stMainBlockContainer"] > div { background: transparent; }
+[data-testid="stHeader"] { background: transparent; }
+[data-testid="stSidebar"] { background: linear-gradient(180deg, #F5D9B8 0%, #EDB98A 100%); }
+[data-baseweb="tab-list"], [data-baseweb="tab-panel"] { background: transparent; }
 </style>
 """, unsafe_allow_html=True)
 with st.container(key="lang_switch"):
