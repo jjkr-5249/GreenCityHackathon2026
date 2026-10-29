@@ -58,26 +58,26 @@ with st.sidebar:
     st.caption(t("tagline"))
     st.divider()
 
+    # Every sidebar widget has a key: without one, Streamlit sees a new widget when the label
+    # changes language, and the ENG / DE switch would reset the choice to its default
     st.subheader(t("time_period"))
-    # the key keeps the chosen period when the label changes language
     period = st.selectbox(t("show_data_from"), PERIODS, format_func=period_label, key="period")
     st.caption(t("all_data", first=short_date(DATA_INFO["first_day"], with_year=True),
                  last=short_date(DATA_INFO["last_day"], with_year=True)))
     st.divider()
 
     st.subheader(t("map_layers"))
-    show_real = st.checkbox(t("layer_real"), value=True)
-    real_by = "livability"  # default when the real-data layer is off
+    show_real = st.checkbox(t("layer_real"), value=True, key="show_real")
+    real_by = "livability"
     if show_real:
         real_by = st.radio(t("color_by"), ["livability", "temperature", "pm25"],
-                           format_func=lambda key: t(f"color_{key}"))
+                           format_func=lambda key: t(f"color_{key}"), key="real_by")
         if real_by == "livability":
             st.caption(t("livability_legend"))
-    show_tracks = st.checkbox(t("layer_tracks"), value=False)
-    show_bike_streets = st.checkbox(t("layer_bike_streets"), value=True)
-    show_access = st.checkbox(t("layer_access"), value=False)
-    show_bumpy = st.checkbox(t("layer_bumpy"), value=True)
-    # bumpy roads whose name is not in the road network can't be drawn
+    show_tracks = st.checkbox(t("layer_tracks"), value=False, key="show_tracks")
+    show_bike_streets = st.checkbox(t("layer_bike_streets"), value=True, key="show_bike_streets")
+    show_access = st.checkbox(t("layer_access"), value=False, key="show_access")
+    show_bumpy = st.checkbox(t("layer_bumpy"), value=True, key="show_bumpy")
     missing = len(BUMPY_ROADS) - len(BUMPY_ON_MAP)
     if show_bumpy and missing:
         st.caption(t("bumpy_missing", missing=missing, total=len(BUMPY_ROADS)))

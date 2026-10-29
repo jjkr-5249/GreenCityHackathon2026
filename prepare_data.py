@@ -100,8 +100,8 @@ def add_ranks(table):
     table = table.copy()
     table["rank_temp"] = table["temp_anom"].rank(method="min").astype(int)
     table["rank_air"] = table["pm25_anom"].rank(method="min").astype(int)
-    # z-score: how many standard deviations a value is from the average of these areas
-    z = lambda s: (s - s.mean()) / s.std(ddof=0)
+    # z-score; when all values are equal (e.g. only one area that month) everyone gets 0
+    z = lambda s: (s - s.mean()) / s.std(ddof=0) if s.std(ddof=0) > 0 else s * 0
     table["score"] = (z(table["temp_anom"]) + z(table["pm25_anom"])) / 2
     table["rank_overall"] = table["score"].rank(method="min").astype(int)
     return table

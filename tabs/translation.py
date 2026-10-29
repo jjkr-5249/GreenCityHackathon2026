@@ -1,11 +1,11 @@
 """Every text on the website in English and German, plus t() / opt() to pick the right one.
-
+ 
 To change a text: edit it in T below (first = English, second = German).
 To add a text: add a new key to T, then use t("your_key") in a tab.
 Texts with {name} placeholders are filled in by t(), e.g. t("selected", name="Flein").
 """
 import streamlit as st
-
+ 
 # ─── UI texts: key -> (English, German) ───
 T = {
     # Sidebar
@@ -27,20 +27,20 @@ T = {
     "time_period": ("Time Period", "Zeitraum"),
     "show_data_from": ("Show data from", "Daten anzeigen von"),
     "all_data": ("All data: {first} to {last}.", "Alle Daten: {first} bis {last}."),
-
+ 
     # Dates and time periods (see periods.py)
     "short_date": ("{d} {m}", "{d}. {m}"),
     "period_all": ("All months ({first} – {last})", "Alle Monate ({first} – {last})"),
     "period_month": ("{month} {year} ({first}–{last})", "{month} {year} ({first}.–{last})"),
     "period_one_day": ("{month} {year} ({day})", "{month} {year} ({day})"),
-
+ 
     # Tabs
     "tab_home": ("🏠 Home", "🏠 Start"),
     "tab_map": ("🗺️ City Map", "🗺️ Stadtkarte"),
     "tab_community": ("👥 Community", "👥 Community"),
     "tab_rate": ("⭐ Rate & Report", "⭐ Bewerten & Melden"),
     "tab_dashboard": ("📊 Dashboard", "📊 Dashboard"),
-
+ 
     # Home tab
     "home_title": ("🌿 Stay cool and safe in Heilbronn", "🌿 Kühl und sicher durch Heilbronn"),
     "home_mission": ("Summers in Heilbronn are getting hotter. EcoCity HN helps you find cooler, cleaner and "
@@ -57,23 +57,6 @@ T = {
     "home_coolest": ("Coolest area: {area}", "Kühlstes Gebiet: {area}"),
     "home_cleanest": ("Cleanest air: {area}", "Sauberste Luft: {area}"),
     "home_most_livable": ("Most livable: {area}", "Höchste Lebensqualität: {area}"),
-    "home_what_you_can_do": ("🧭 What you can do here", "🧭 Was du hier tun kannst"),
-    "home_map_text": ("Find the cooler, cleaner-air areas of Heilbronn.<br>"
-                      "Plan smooth bike routes that avoid bumpy roads.",
-                      "Finde die kühleren Gebiete mit sauberer Luft in Heilbronn.<br>"
-                      "Plane glatte Radwege ohne holprige Straßen."),
-    "home_community_text": ("Meet neighbours to jog, walk, cycle or do yoga.<br>"
-                            "Go together at cooler times of the day.",
-                            "Triff Nachbarn zum Joggen, Gehen, Radfahren oder Yoga.<br>"
-                            "Gemeinsam zu kühleren Tageszeiten."),
-    "home_rate_text": ("Rate places and report missing shade or water.<br>"
-                       "Share ideas for the city and vote for the best ones.",
-                       "Bewerte Orte und melde fehlenden Schatten oder fehlendes Wasser.<br>"
-                       "Teile Ideen für die Stadt und stimme für die besten."),
-    "home_dashboard_text": ("See which areas are hottest and dustiest.<br>"
-                            "Shows planners where trees, shade and repairs help most.",
-                            "Sieh, welche Gebiete am heißesten und staubigsten sind.<br>"
-                            "Zeigt der Stadtplanung, wo Bäume, Schatten und Reparaturen am meisten helfen."),
     "home_how_header": ("🔄 How your input helps the city", "🔄 Wie deine Beiträge der Stadt helfen"),
     "home_step1_title": ("You move and share", "Du bist unterwegs und teilst"),
     "home_step1_text": ("Sensor bikes measure heat and fine dust as they ride. You add ratings, reports and ideas.",
@@ -88,7 +71,7 @@ T = {
     "home_step3_text": ("The Dashboard shows where more trees, shade, water points or road repairs would help most.",
                         "Das Dashboard zeigt, wo mehr Bäume, Schatten, Wasserstellen oder Straßenreparaturen "
                         "am meisten helfen würden."),
-
+ 
     # Map tab
     "map_header": ("☀️ Heilbronn Climate Map", "☀️ Klimakarte Heilbronn"),
     "measured_by": ("Measured by {sensors} openSenseMap sensor bikes, {first} to {last}",
@@ -125,7 +108,7 @@ T = {
                   "PM2.5: {pm25:.1f} µg/m³ | PM10: {pm10:.1f} µg/m³",
                   "📍 **{area}** — Rang {rank} von {total} | {temp:.1f} °C ({anom:+.2f} °C ggü. Stadt) | "
                   "PM2.5: {pm25:.1f} µg/m³ | PM10: {pm10:.1f} µg/m³"),
-
+ 
     # Area popup
     "air_cleaner": ("🟢 Cleaner than average", "🟢 Sauberer als der Durchschnitt"),
     "air_slightly_worse": ("🟠 Slightly worse", "🟠 Etwas schlechter"),
@@ -153,7 +136,7 @@ T = {
     "area_footer": ("{readings} readings · {days} days · {riders} bikes",
                     "{readings} Messwerte · {days} Tage · {riders} Räder"),
     "area_tooltip": ("📡 {area} — click for values", "📡 {area} — klicken für Werte"),
-
+ 
     # Bike streets and bumpy roads on the map
     "own_lane_full": ("🚲 Own bike lane", "🚲 Eigener Radweg"),
     "shared_lane_full": ("🚗🚲 Shared lane (bikes and cars)", "🚗🚲 Geteilte Spur (Räder und Autos)"),
@@ -163,7 +146,7 @@ T = {
     "peak_roughness": ("Peak roughness: {v:.0f}", "Höchste Rauheit: {v:.0f}"),
     "segments_with_data": ("{n} segments with data", "{n} Abschnitte mit Daten"),
     "bumpy_tooltip": ("🛣️ {name} — roughness {v:.0f}", "🛣️ {name} — Rauheit {v:.0f}"),
-
+ 
     # Smooth route between bike streets
     "route_tooltip": ("♿ Smooth route to {target} — {km:.1f} km", "♿ Glatter Weg nach {target} — {km:.1f} km"),
     "route_direct": ("♿🚲 **{start}** connects directly with **{target}**.",
@@ -179,7 +162,7 @@ T = {
     "clear_route": ("✖ Clear route", "✖ Weg ausblenden"),
     "click_hint": ("💡 Click a violet bike street to see the smoothest route to the next bike lane.",
                    "💡 Klicke auf eine violette Radstraße, um den glattesten Weg zum nächsten Radweg zu sehen."),
-
+ 
     # Accessible routes
     "access_header": ("♿ Accessible Routes", "♿ Barrierearme Wege"),
     "access_caption": ("Parts of the bike streets that the sensor bikes rode at least {n} times "
@@ -191,7 +174,7 @@ T = {
     "access_tooltip": ("♿ {name} — {kind}, {km:.1f} km checked", "♿ {name} — {kind}, {km:.1f} km geprüft"),
     "access_popup": ("<b>♿ {name}</b><br>{area}<br><br>{kind}<br>{km:.1f} of {total:.1f} km checked with the sensor bikes",
                      "<b>♿ {name}</b><br>{area}<br><br>{kind}<br>{km:.1f} von {total:.1f} km mit den Sensor-Rädern geprüft"),
-
+ 
     # Community tab
     "community_header": ("👥 Community Hub", "👥 Community-Treffpunkt"),
     "create_meetup": ("Create a Meetup", "Treffen erstellen"),
@@ -212,7 +195,7 @@ T = {
     "organized_by": ("Organized by {name}", "Organisiert von {name}"),
     "joined": ("✅ Joined", "✅ Dabei"),
     "join_event": ("Join this event", "Mitmachen"),
-
+ 
     # Rate & Report tab
     "rate_header": ("⭐ Rate, Report & Ideas", "⭐ Bewerten, Melden & Ideen"),
     "subtab_rate": ("📝 Rate & Report", "📝 Bewerten & Melden"),
@@ -239,7 +222,7 @@ T = {
     "most_requested": ("Most Requested", "Am häufigsten gewünscht"),
     "need": ("Need", "Bedarf"),
     "votes": ("Votes", "Stimmen"),
-
+ 
     # Community Ideas Board
     "ideas_intro": ("Citizens share ideas to make Heilbronn more liveable. Vote on ideas you support!",
                     "Bürgerinnen und Bürger teilen Ideen, um Heilbronn lebenswerter zu machen. Stimme für die Ideen, die du unterstützt!"),
@@ -260,7 +243,7 @@ T = {
     "show_on_map": ("📍 Show on Map", "📍 Auf Karte zeigen"),
     "image_missing": ("📷 Image: {file} not found — place it in the images folder",
                       "📷 Bild: {file} nicht gefunden — lege es in den Ordner images"),
-
+ 
     # Idea 1: Cooling Wall
     "idea1_title": ("Cooling Water Walls at Hot Spots", "Kühlende Wasserwände an Hitze-Hotspots"),
     "idea1_meta": ("Posted by <b>Maria S.</b> · 📍 Marktplatz · 3 days ago",
@@ -273,24 +256,24 @@ T = {
 **Install water cooling walls** at Heilbronn's hottest spots like Marktplatz and Kaiserstrasse.
 These vertical water features with wooden frames and green facades can cool the surrounding
 area by 3-5°C through evaporative cooling. They also add greenery and improve air quality.
-
+ 
 **Why it works:** Water evaporation absorbs heat from the air. Combined with plants on the
 facade, it creates a natural micro-climate cooling effect. Benches nearby let people sit
 and enjoy the cooler zone.
-
+ 
 **Suggested locations:** Marktplatz (35.2°C avg), Hauptbahnhof (34.0°C avg)
 """, """
 **Wasser-Kühlwände installieren** an Heilbronns heißesten Orten wie Marktplatz und Kaiserstraße.
 Diese vertikalen Wasserelemente mit Holzrahmen und begrünter Fassade können die Umgebung
 durch Verdunstungskühlung um 3–5 °C abkühlen. Außerdem bringen sie mehr Grün und verbessern die Luftqualität.
-
+ 
 **Warum es funktioniert:** Verdunstendes Wasser entzieht der Luft Wärme. Zusammen mit den Pflanzen
 an der Fassade entsteht ein natürliches, kühlendes Mikroklima. Bänke in der Nähe laden zum Verweilen
 in der kühleren Zone ein.
-
+ 
 **Vorgeschlagene Orte:** Marktplatz (Ø 35,2 °C), Hauptbahnhof (Ø 34,0 °C)
 """),
-
+ 
     # Idea 2: Lamp Post Sensors
     "idea2_title": ("Smart Lamp Post Sensor Network", "Sensornetz an smarten Straßenlaternen"),
     "idea2_meta": ("Posted by <b>Jonas K.</b> · 📍 City-wide · 5 days ago",
@@ -312,35 +295,35 @@ in der kühleren Zone ein.
     "idea2_body": ("""
 **Mount sensor boxes on existing lamp posts** across Heilbronn to dramatically expand our
 environmental monitoring coverage — no new infrastructure needed!
-
+ 
 **The setup:**
 - senseBox sensor unit attached to the lamp post, powered by the existing electricity
 - Measures temperature, humidity, PM1/PM2.5/PM4/PM10 particulate matter
 - **NEW: NO₂ and O₃ gas sensors** to track traffic pollution and summer ozone
 - Bird box-style housing that blends naturally into the streetscape
-
+ 
 **Why NO₂ and O₃ matter:** NO₂ comes directly from vehicle exhaust. Ground-level ozone (O₃)
 forms when sunlight cooks traffic fumes — it gets **worst on the hottest days**, exactly when
 EcoCity users need the cleanest routes.
-
+ 
 **Coverage goal:** Every 200m along main roads = complete city monitoring
 """, """
 **Sensorboxen an bestehenden Straßenlaternen montieren** – so erweitern wir die Umweltmessung
 in ganz Heilbronn enorm, ganz ohne neue Infrastruktur!
-
+ 
 **Der Aufbau:**
 - senseBox-Sensoreinheit am Laternenmast, versorgt über den vorhandenen Stromanschluss
 - Misst Temperatur, Luftfeuchtigkeit und Feinstaub (PM1/PM2.5/PM4/PM10)
 - **NEU: NO₂- und O₃-Gassensoren**, um Verkehrsabgase und Sommerozon zu erfassen
 - Gehäuse im Vogelhaus-Stil, das sich natürlich ins Stadtbild einfügt
-
+ 
 **Warum NO₂ und O₃ wichtig sind:** NO₂ stammt direkt aus Autoabgasen. Bodennahes Ozon (O₃)
 entsteht, wenn Sonnenlicht auf Verkehrsabgase trifft – es ist **an den heißesten Tagen am
 schlimmsten**, genau dann, wenn EcoCity-Nutzer die saubersten Routen brauchen.
-
+ 
 **Ziel der Abdeckung:** Alle 200 m entlang der Hauptstraßen = flächendeckende Messung in der ganzen Stadt
 """),
-
+ 
     # Idea 3: Pet-Friendly Water Stations
     "idea3_title": ("Pet-Friendly Drinking Water Stations", "Haustierfreundliche Trinkwasserstationen"),
     "idea3_meta": ("Posted by <b>Sophie L.</b> · 📍 Wertwiesenpark, Neckarufer · 1 week ago",
@@ -364,35 +347,35 @@ schlimmsten**, genau dann, wenn EcoCity-Nutzer die saubersten Routen brauchen.
     "idea3_body": ("""
 **Dual-level drinking fountains** that serve both people and their pets! Perfect for
 Heilbronn's parks and walking paths along the Neckar.
-
+ 
 **Design features:**
 - **Upper level:** Standard drinking fountain + bottle refill spout for humans
 - **Lower level:** Sliding panel at the base that opens to reveal a stainless steel water bowl for dogs and cats
 - **Hygienic:** Auto-drain after each use, self-cleaning cycle, fresh water each time
 - **Sustainable:** Optional rainwater collection system for the pet bowl
-
+ 
 **Why this matters:** On hot summer days, dogs suffer from heat too. Dog owners currently
 carry extra water or look for puddles. These stations make walks safer for pets and encourage
 people to walk longer cool routes instead of cutting through hot zones.
-
+ 
 **Suggested locations:** Wertwiesenpark (popular dog walking), Neckarufer paths, Pfuehlpark
 """, """
 **Trinkbrunnen auf zwei Ebenen**, die Menschen und ihren Haustieren dienen! Perfekt für
 Heilbronns Parks und Spazierwege entlang des Neckars.
-
+ 
 **Design-Merkmale:**
 - **Obere Ebene:** Normaler Trinkbrunnen + Nachfüllhahn für Flaschen
 - **Untere Ebene:** Eine Schiebeklappe am Sockel gibt einen Edelstahl-Wassernapf für Hunde und Katzen frei
 - **Hygienisch:** Automatischer Ablauf nach jeder Nutzung, Selbstreinigung, jedes Mal frisches Wasser
 - **Nachhaltig:** Optionale Regenwassernutzung für den Tiernapf
-
+ 
 **Warum das wichtig ist:** An heißen Sommertagen leiden auch Hunde unter der Hitze. Hundehalter
 tragen heute extra Wasser mit oder suchen nach Pfützen. Diese Stationen machen Spaziergänge für
 Tiere sicherer und motivieren dazu, längere kühle Routen zu gehen, statt durch heiße Zonen abzukürzen.
-
+ 
 **Vorgeschlagene Orte:** Wertwiesenpark (beliebt bei Hundehaltern), Wege am Neckarufer, Pfühlpark
 """),
-
+ 
     # Idea 4: Kids Tree Planting Initiative
     "idea4_title": ("Cool Our School Road! — Sapling Squad 🌳", "Kühle Schulstraße! — Die Setzling-Truppe 🌳"),
     "idea4_meta": ("Posted by <b>Class 4a, Grundschule Dammstrasse</b> 👧👦 · Ages 9-10 · 📍 Kaiserstrasse & Dammstrasse · 5 days ago",
@@ -419,7 +402,7 @@ Tiere sicherer und motivieren dazu, längere kühle Routen zu gehen, statt durch
 *"Hello! We are Class 4a and on Environment Day our teacher showed us the EcoCity app.
 We checked — the road from our school to the bus stop is 34°C in summer! There are
 NO trees at all. So we have a plan!"* 🌱
-
+ 
 **Our "Sapling Squad" Plan:**
 - **Plant tree saplings** along Kaiserstrasse and Dammstrasse near our school
 - **We take care of them!** Every class gets a watering schedule — Team A on Monday,
@@ -428,16 +411,16 @@ NO trees at all. So we have a plan!"* 🌱
 - We measure the temperature next to our trees every week using a thermometer
   and track it on the EcoCity app
 - **Next year's Class 4 takes over** — so the trees always have caretakers!
-
+ 
 **What we need from the city:**
 - Saplings (we researched: linden trees and maples grow well in Heilbronn!)
 - Permission to plant along the school road
 - A few watering cans for the school
-
+ 
 *"Our teacher Herr Weber says if each class plants 10 trees, in 5 years the
 whole road will be shaded. We did the math — that's 50 trees from just our
 school! And if other schools join..."* 🌳🌳🌳
-
+ 
 **Herr Weber's note:** *"This project teaches the children responsibility, teamwork,
 and climate science. They've already used EcoCity data to identify the hottest
 streets near school. The daily watering rota is their own idea — I'm very proud."*
@@ -445,7 +428,7 @@ streets near school. The daily watering rota is their own idea — I'm very prou
 *„Hallo! Wir sind die Klasse 4a, und am Umwelttag hat uns unser Lehrer die EcoCity-App gezeigt.
 Wir haben nachgeschaut – der Weg von unserer Schule zur Bushaltestelle hat im Sommer 34 °C!
 Dort gibt es KEINEN einzigen Baum. Also haben wir einen Plan!“* 🌱
-
+ 
 **Unser „Setzling-Truppe“-Plan:**
 - **Baumsetzlinge pflanzen** entlang der Kaiserstraße und Dammstraße bei unserer Schule
 - **Wir kümmern uns um sie!** Jede Klasse bekommt einen Gießplan – Team A am Montag,
@@ -454,23 +437,23 @@ Dort gibt es KEINEN einzigen Baum. Also haben wir einen Plan!“* 🌱
 - Wir messen jede Woche mit einem Thermometer die Temperatur neben unseren Bäumen
   und tragen sie in die EcoCity-App ein
 - **Die nächste 4. Klasse übernimmt** – so haben die Bäume immer jemanden, der sich kümmert!
-
+ 
 **Was wir von der Stadt brauchen:**
 - Setzlinge (wir haben recherchiert: Linden und Ahorn wachsen gut in Heilbronn!)
 - Die Erlaubnis, entlang des Schulwegs zu pflanzen
 - Ein paar Gießkannen für die Schule
-
+ 
 *„Unser Lehrer Herr Weber sagt, wenn jede Klasse 10 Bäume pflanzt, ist in 5 Jahren die
 ganze Straße beschattet. Wir haben nachgerechnet – das sind 50 Bäume allein von unserer
 Schule! Und wenn andere Schulen mitmachen …“* 🌳🌳🌳
-
+ 
 **Anmerkung von Herrn Weber:** *„Dieses Projekt lehrt die Kinder Verantwortung, Teamarbeit
 und Klimawissenschaft. Sie haben bereits EcoCity-Daten genutzt, um die heißesten Straßen
 rund um die Schule zu finden. Der tägliche Gießplan war ihre eigene Idee – ich bin sehr stolz.“*
 """),
     "idea4_top_comment": ('💬 Top comment: *"This is what education should look like. Our school wants to join — can we make this city-wide?"* — Frau Müller, Elly-Heuss-Knapp Gymnasium',
                           '💬 Top-Kommentar: *„So sollte Bildung aussehen. Unsere Schule möchte mitmachen – können wir das stadtweit machen?“* — Frau Müller, Elly-Heuss-Knapp-Gymnasium'),
-
+ 
     # Idea 5: Elderly Crochet Shade Canopy
     "idea5_title": ("Crochet Shade Canopy — Let Us Knit Heilbronn Cool!",
                     "Gehäkeltes Schattendach — Lasst uns Heilbronn kühl stricken!"),
@@ -482,55 +465,55 @@ rund um die Schule zu finden. Der tägliche Gießplan war ihre eigene Idee – i
 *"Liebe Heilbronner! Our knitting circle has 25 members, ages 58 to 82. We've been meeting
 every Wednesday for years. When we saw what the women in Spain did — crocheting beautiful
 shade canopies over their streets — we said: WE CAN DO THIS TOO!"* 👵🧶
-
+ 
 **Our proposal:**
 - Our group "Goldene Nadeln" will crochet colorful shade panels from recycled yarn
 - We string them between buildings over Kaiserstrasse and Marktplatz in summer
 - Each panel is a unique artwork — we'll weave in Heilbronn landmarks and patterns
 - **We just need the city to provide yarn and the hanging infrastructure!**
-
+ 
 **Why it works — proven in Spain:**
 In Valverde de la Vera, elderly women created "Tejiendo la Calle" (Knitting the Street) —
 XXL crochet sunshades that cool streets by up to 5°C. In Alhaurín de la Torre near Malaga,
 40 women crocheted a 13,000 sq ft canopy over the shopping street. Both projects won
 European awards.
-
+ 
 **What we bring:** Community spirit, skilled hands, and time. What we need: yarn,
 metal cables between buildings, and the city's blessing.
-
+ 
 **If this project gets accepted, we'll need more hands!** We will post a meetup in the
 Community Hub to recruit new members — all ages welcome, beginners too. We'll teach you! 🧶
-
+ 
 Let's knit Heilbronn cool! 🧶❤️
 """, """
 *„Liebe Heilbronner! Unser Strickkreis hat 25 Mitglieder zwischen 58 und 82 Jahren. Wir treffen
 uns seit Jahren jeden Mittwoch. Als wir gesehen haben, was die Frauen in Spanien gemacht haben –
 wunderschöne Schattendächer über ihre Straßen zu häkeln –, haben wir gesagt: DAS KÖNNEN WIR AUCH!“* 👵🧶
-
+ 
 **Unser Vorschlag:**
 - Unsere Gruppe „Goldene Nadeln“ häkelt bunte Schattenbahnen aus recyceltem Garn
 - Im Sommer spannen wir sie zwischen den Gebäuden über Kaiserstraße und Marktplatz
 - Jede Bahn ist ein Unikat – wir häkeln Heilbronner Wahrzeichen und Muster hinein
 - **Wir brauchen von der Stadt nur Garn und die Aufhängung!**
-
+ 
 **Warum es funktioniert – in Spanien erprobt:**
 In Valverde de la Vera haben ältere Frauen „Tejiendo la Calle“ (Die Straße stricken) ins Leben
 gerufen – riesige gehäkelte Sonnensegel, die Straßen um bis zu 5 °C abkühlen. In Alhaurín de la
 Torre bei Málaga häkelten 40 Frauen ein rund 1.200 m² großes Dach über die Einkaufsstraße. Beide
 Projekte wurden mit europäischen Preisen ausgezeichnet.
-
+ 
 **Was wir mitbringen:** Gemeinschaftssinn, geschickte Hände und Zeit. Was wir brauchen: Garn,
 Stahlseile zwischen den Gebäuden und den Segen der Stadt.
-
+ 
 **Wenn das Projekt angenommen wird, brauchen wir mehr Hände!** Wir posten dann ein Treffen im
 Community-Treffpunkt, um neue Mitglieder zu gewinnen – alle Altersgruppen willkommen, auch
 Anfänger. Wir bringen es euch bei! 🧶
-
+ 
 Lasst uns Heilbronn kühl stricken! 🧶❤️
 """),
     "idea5_top_comment": ('💬 Top comment: *"This is the most beautiful idea! My Oma wants to join!"* — Lena, 29',
                           '💬 Top-Kommentar: *„Das ist die schönste Idee überhaupt! Meine Oma will mitmachen!“* — Lena, 29'),
-
+ 
     # Dashboard tab
     "dashboard_header": ("📊 Heilbronn Bike Sensor Analysis", "📊 Auswertung der Heilbronner Sensor-Räder"),
     "dashboard_caption": ("openSenseMap bike sensors · {sensors} bikes · {points} readings · {first} to {last}",
@@ -569,7 +552,7 @@ Lasst uns Heilbronn kühl stricken! 🧶❤️
                              "Lila = Straßen, die die Sensor-Räder befahren haben (dunkler = mehr Messwerte). Kreise = die bewerteten Gebiete."),
     "coverage_tooltip": ("📡 {area} — {readings} readings on {days} days", "📡 {area} — {readings} Messwerte an {days} Tagen"),
     "overall_result": ("🏁 Overall Result · {period}", "🏁 Gesamtergebnis · {period}"),
-
+ 
     # Dashboard: month by month
     "by_month_header": ("📅 Month by Month", "📅 Monat für Monat"),
     "by_month_caption": ("An area counts in a month only with at least {readings} readings on {days} days; "
@@ -589,12 +572,12 @@ Lasst uns Heilbronn kühl stricken! 🧶❤️
     "axis_temp_vs_city": ("°C vs. city (same hour)", "°C ggü. Stadt (selbe Uhrzeit)"),
     "axis_livability": ("Livability (0–100)", "Lebensqualität (0–100)"),
     "last_month_note": ("The last month only has data until {day}.", "Der letzte Monat hat nur Daten bis zum {day}."),
-
+ 
     # Footer
     "footer": ("🌿 EcoCity HN — Green City Heilbronn Hackathon | Data: openSenseMap · OpenStreetMap",
                "🌿 EcoCity HN — Green City Heilbronn Hackathon | Daten: openSenseMap · OpenStreetMap"),
 }
-
+ 
 # ─── German names for option values and data categories (English value -> German) ───
 OPTIONS_DE = {
     # Activities
@@ -619,7 +602,7 @@ OPTIONS_DE = {
     "Trees": "Bäume", "Fountains": "Brunnen", "Cooling": "Kühlung",
     "Pet Water": "Wasser für Tiere", "Sensors": "Sensoren",
 }
-
+ 
 # ─── German versions of the demo data texts ───
 # meetup id -> (title, description), see community_examples.py
 MEETUPS_DE = {
@@ -628,7 +611,6 @@ MEETUPS_DE = {
     3: ("Rundgang zu kühlen Orten", "Geführter Spaziergang zu Heilbronns kühlsten Orten."),
     4: ("Radtour im Wald", "Schattige Waldstrecke. ca. 10 km, mittelschwer."),
 }
-
 # spot name -> comment, see RATINGS in community_examples.py
 RATING_COMMENTS_DE = {
     "Waldgebiet Jaegerhaus": "Kühlster Ort der Stadt",
@@ -639,42 +621,42 @@ RATING_COMMENTS_DE = {
     "Hauptbahnhof": "Hitzefalle aus Beton",
     "Marktplatz": "Zu heiß, nachmittags meiden",
 }
-
+ 
 MONTH_NAMES = {
     "en": ["January", "February", "March", "April", "May", "June",
            "July", "August", "September", "October", "November", "December"],
     "de": ["Januar", "Februar", "März", "April", "Mai", "Juni",
            "Juli", "August", "September", "Oktober", "November", "Dezember"],
 }
-
-
+ 
+ 
 def translate(key, lang, **kwargs):
     """Text for key in lang ("en" or "de"), with any {placeholders} filled in from kwargs."""
     text = T[key][1 if lang == "de" else 0]
     return text.format(**kwargs) if kwargs else text
-
-
+ 
+ 
 def translate_option(value, lang):
     """German name of a dropdown option (English stays as it is; unknown values are returned unchanged)."""
     return OPTIONS_DE.get(value, value) if lang == "de" else value
-
-
+ 
+ 
 # ─── Shortcuts for the current page language (set by the ENG / DE switch, key "lang_de") ───
 def get_lang():
     """"de" when the ENG / DE switch is on, else "en"."""
     return "de" if st.session_state.get("lang_de") else "en"
-
-
+ 
+ 
 def t(key, **kwargs):
     """Text for key in the page language, e.g. t("selected", name="Flein")."""
     return translate(key, get_lang(), **kwargs)
-
-
+ 
+ 
 def opt(value):
     """Dropdown option in the page language (used as format_func in selectboxes)."""
     return translate_option(value, get_lang())
-
-
+ 
+ 
 def month_name(number, short=False):
     """Name of month 1-12 in the page language; short = first three letters ("Jun", "Okt")."""
     name = MONTH_NAMES[get_lang()][number - 1]
